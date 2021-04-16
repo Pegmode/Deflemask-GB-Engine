@@ -1,4 +1,9 @@
 *.exe
+*.bak
+*.sym
+*.map
+*.obj
 .vscode/
 /gbEngine/zlib1.dll
-*.bak
+/vgmConverter/*.bin
+/vgmConverter/*.vgm

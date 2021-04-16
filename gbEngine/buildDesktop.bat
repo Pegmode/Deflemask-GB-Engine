@@ -13,7 +13,7 @@ echo Assembly success!
 START "shit" %bgb% %project_name%.gb
 
 del %project_name%.map
-del %project_name%.sym
+ %project_name%.sym
 del %project_name%.obj
 
 timeout 5

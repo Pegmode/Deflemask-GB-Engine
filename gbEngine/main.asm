@@ -6,7 +6,8 @@ include "vars.asm"
 SECTION "vBlank IRQ",ROM0[$40]
 vBlankIRQ:
     jp vBlankRoutine
-
+SECTION "MBCDefinition",ROM0[$147]
+    dw CART_MBC5
 SECTION "EntryPoint",ROM0[$100]
 jp codeInit
 
@@ -27,91 +28,11 @@ vBlankRoutine:
     call DMEngineUpdate
     reti
 
-;ENGINE CODE
-DMEngineInit:
-    ld a,DMVGM_START_BANK
-    ld [CurrentSoundBank],a
-    ld a,$40;load $4000 in pointer
-    ld [VgmLookupPointerHigh],a
-    xor a
-    ld [VgmLookupPointerLow],a
-    ld a,1
-    ld [SoundWaitFrames],a;set to not waiting any frames
-    xor a
-    ld [SoundStatus],a;set engine to not playing status
-    ret
+include "DMGBVGM.asm"
 
-DMEngineUpdate:
-.checkEngineStatus;check if the engine is currently playing a song
-    ld a,[SoundStatus]
-    cp 1
-    jr z,.checkIsWaitFrame
-    ret
-.checkIsWaitFrame;check if the engine is currently in a wait state
-    ld a,[SoundWaitFrames]
-    cp 1
-    jr z,.commandCheckInit
-    dec a
-    ld [SoundWaitFrames],a
-    ret
-.commandCheckInit
-    ld hl,VgmLookupPointer;load data pointer
-    ld b,[hl]
-    inc hl
-    ld c,[hl]
-    ld h,b
-    ld l,c
-.commandCheck
-    ld a,[hl];load data at data pointer, don't inc hl here because it may not be needed for current command
-.checkWriteCmd
-    ld b,b
-    bit 7,a
-    jr z,.checkWaitCmd
-    inc hl
-    ld a, [hl+]
-    ld b, $FF
-    ld c, a
-    ld a, [hl+]
-    ld [bc], a
-    jr .commandCheck
-.checkWaitCmd
-    bit 6,a
-    jr z,.checkNextBank
-    inc hl
-    ld a,[hl+]
-    ld [SoundWaitFrames],a
-    jr .endFrame
-.checkNextBank
-    bit 5,a
-    jr z,.checkLoop
-    ld bc, $4000
-    ld hl, VgmLookupPointer 
-    ld [hl], b
-    inc hl
-    ld [hl], c
-    ld a,[CurrentSoundBank]
-    inc a
-    ld [CurrentSoundBank],a
-    jr .endFrame
-.checkLoop;unimplemented
-    bit 4,a
-    jr z,.checkEndSong
-.checkEndSong
-    bit 3,a
-    jr z,.errorInCheck
-    ;No need to set up registers for quiet status. should be done in tracker via envelopes, OFF or ECxx
-    xor a
-    ld [SoundStatus],a
-    jr .endFrame
-.errorInCheck
-    ;handle stuff
-    ld b,b;debug breakpoint
-.endFrame
-    ld a, h
-    ld [VgmLookupPointerHigh],a
-    ld a, l
-    ld [VgmLookupPointerLow],a
-    ret
-
-SECTION "SoundData",ROMX,BANK[1]
-incbin "ExampleData/scaleTestData.bin"
+SECTION "SoundData1",ROMX,BANK[1]
+incbin "ExampleData/wide putin/songBank0.bin"
+SECTION "SoundData2",ROMX,BANK[2]
+incbin "ExampleData/wide putin/songBank1.bin"
+SECTION "SoundData3",ROMX,BANK[3]
+incbin "ExampleData/wide putin/songBank2.bin"
