@@ -7,9 +7,16 @@ SECTION "vBlank IRQ",ROM0[$40]
 vBlankIRQ:
     jp vBlankRoutine
 
+SECTION "EntryPoint",ROM0[$100]
+jp codeInit
+
 SECTION "code",ROM0[$150]
-entryPoint:
-    ld [rIE], $01;enable Vblank interupt
+codeInit:
+    ld a, $01
+    ld [rIE], a;enable Vblank interupt
+    call DMEngineInit
+    ld a, 1
+    ld [SoundStatus],a
     ei
 
 main:;main loop
@@ -17,15 +24,17 @@ main:;main loop
     jp main
 
 vBlankRoutine:
-
+    call DMEngineUpdate
     reti
 
 ;ENGINE CODE
 DMEngineInit:
     ld a,DMVGM_START_BANK
     ld [CurrentSoundBank],a
-    ld hl,$4000;bankX start address
-    ld [VgmLookupPointer],hl
+    ld a,$40;load $4000 in pointer
+    ld [VgmLookupPointerHigh],a
+    xor a
+    ld [VgmLookupPointerLow],a
     ld a,1
     ld [SoundWaitFrames],a;set to not waiting any frames
     xor a
@@ -36,7 +45,8 @@ DMEngineUpdate:
 .checkEngineStatus;check if the engine is currently playing a song
     ld a,[SoundStatus]
     cp 1
-    jr nz,.exitCurrentFrame
+    jr z,.checkIsWaitFrame
+    ret
 .checkIsWaitFrame;check if the engine is currently in a wait state
     ld a,[SoundWaitFrames]
     cp 1
@@ -49,12 +59,14 @@ DMEngineUpdate:
     ld b,[hl]
     inc hl
     ld c,[hl]
-    ld hl,bc
+    ld h,b
+    ld l,c
 .commandCheck
     ld a,[hl];load data at data pointer, don't inc hl here because it may not be needed for current command
 .checkWriteCmd
+    ld b,b
     bit 7,a
-    jr nz,.checkWaitCmd
+    jr z,.checkWaitCmd
     inc hl
     ld a, [hl+]
     ld b, $FF
@@ -64,14 +76,14 @@ DMEngineUpdate:
     jr .commandCheck
 .checkWaitCmd
     bit 6,a
-    jr nz,.checkNextBank
+    jr z,.checkNextBank
     inc hl
     ld a,[hl+]
     ld [SoundWaitFrames],a
-    ret
+    jr .endFrame
 .checkNextBank
     bit 5,a
-    jr nz,.checkLoop
+    jr z,.checkLoop
     ld bc, $4000
     ld hl, VgmLookupPointer 
     ld [hl], b
@@ -80,20 +92,26 @@ DMEngineUpdate:
     ld a,[CurrentSoundBank]
     inc a
     ld [CurrentSoundBank],a
-    ret
+    jr .endFrame
 .checkLoop;unimplemented
     bit 4,a
-    jr nz,.checkEndSong
+    jr z,.checkEndSong
 .checkEndSong
     bit 3,a
-    jr nz,.errorInCheck
+    jr z,.errorInCheck
     ;No need to set up registers for quiet status. should be done in tracker via envelopes, OFF or ECxx
     xor a
     ld [SoundStatus],a
-
+    jr .endFrame
 .errorInCheck
     ;handle stuff
     ld b,b;debug breakpoint
+.endFrame
+    ld a, h
+    ld [VgmLookupPointerHigh],a
+    ld a, l
+    ld [VgmLookupPointerLow],a
+    ret
 
-SECTION "SoundData",ROM1[$4000]
-include "ExampleData/scaleTestData.bin"
+SECTION "SoundData",ROMX,BANK[1]
+incbin "ExampleData/scaleTestData.bin"
