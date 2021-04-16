@@ -35,6 +35,9 @@ struct VgmBuffer{//contains vgm info and file buffer for Deflemask generated GB 
 };
 typedef struct VgmBuffer VgmBuffer;
 
+int ENGINE_RATE = 60;//default rate to 60hz
+char OUTPATH[0xFF] = "songBank";
+
 //CODE
 //===========================================================
 
@@ -79,7 +82,12 @@ int checkIfBankEnd(int currentOutputPos,int distance){//check if a given write o
 }
 
 int samplesToFrames(int engineRate,int samples){//calculate the number of frames based on number of samples
-    return (int)(((float)samples / (float)VGM_SAMPLE_RATE) / (1 / (float)engineRate));
+    float frameCount = ((float)samples / (float)VGM_SAMPLE_RATE) / (1 / (float)engineRate);
+    if (frameCount != (int)frameCount){
+        printf("ERROR: Frame calculation failure. Engine tick rate of %uhz is likely incorrect. Use -r argumment to change engine rate\n",ENGINE_RATE);
+        exit(1);
+    }
+    return (int)frameCount;
 }
 
 
@@ -105,7 +113,7 @@ void checkVgmIsDeflemask(VgmBuffer vgmBuffer){
 void writeAllBanks(uint8_t** banks,int numBanks){
     char outputName[0xFF];
     for(int i = 0; i <= numBanks; i++){
-        sprintf(outputName,"songBank%u.bin",i);
+        sprintf(outputName,"%s%u.bin",OUTPATH,i);
         FILE *f = fopen(outputName,"wb");
         fwrite(banks[i],1,GB_BANK_SIZE,f);
         fclose(f);
@@ -130,7 +138,6 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
             switch(vgmBuffer.buffer[currentVgmPos]){
                 case WRITEVGMCOMMAND://write to 0xFFXX
                     if (checkIfBankEnd(currentOutputPos,3)){
-                        printf("moving to next back in WRITE\n");
                         notEndOfBank = 0;    
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND;
                     }
@@ -148,7 +155,6 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     break;
                 case WAITVGMCOMMAND://wait for XX frames
                     if (checkIfBankEnd(currentOutputPos,2)){
-                        printf("moving to next back in Wait\n");
                         notEndOfBank = 0;    
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND;
                     }
@@ -161,7 +167,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                         currentVgmPos++;
                         int lowV = (int)vgmBuffer.buffer[currentVgmPos];
                         int numberOfSamples = (lowV << 8) | highV;//mask 16bit 
-                        int numberOfFrames = samplesToFrames(60,numberOfSamples);//change 60 to be scanned value later
+                        int numberOfFrames = samplesToFrames(ENGINE_RATE,numberOfSamples);//change 60 to be scanned value later
                         currentBankBuffer[currentOutputPos] = numberOfFrames;
                         currentVgmPos++;
                         currentOutputPos++; 
@@ -169,7 +175,6 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     break;
                 case WAITSTDVGMCOMMAND://wait for 1 frame in 60hz engine rate
                     if (checkIfBankEnd(currentOutputPos,1)){
-                        printf("moving to next back in SWait\n");
                         notEndOfBank = 0;   
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND; 
                     }
@@ -184,7 +189,6 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
 
                 case DATABLOCKVGMCOMMAND://write data to 0xFF<SYNC_ADDRESS> +=9
                     if (checkIfBankEnd(currentOutputPos,2)){
-                        printf("moving to next back in Datablock\n");
                         notEndOfBank = 0;    
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND;
                     }
@@ -218,13 +222,27 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
     printf("Conversion Complete!\n%u banks used\n",currentBank+1);
 }
 
-
-
-int main(int argc, char* argv[]){
+void parseArgs(int argc, char** argv){
     if (argc < 2){
         printf("Must give a .vgm as argument to program\n");
         exit(1);
     }
+    for (int i = 2; i < argc; i++){
+        if(strcmp("-r",argv[i]) == 0){//rate
+            i++;
+            ENGINE_RATE = atoi(argv[i]);
+            printf("Engine rate set to %u"),ENGINE_RATE;
+        }
+        else if(strcmp("-o",argv[i]) == 0){//output path
+            i++;
+            strcpy(OUTPATH,argv[i]);
+        }
+    }   
+
+}
+
+int main(int argc, char* argv[]){
+    parseArgs(argc,argv);
     printf("RUNNING\n");
     VgmBuffer vgmBuffer;
     printf("OPENING .vgm\n");    

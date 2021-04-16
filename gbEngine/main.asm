@@ -6,8 +6,13 @@ include "vars.asm"
 SECTION "vBlank IRQ",ROM0[$40]
 vBlankIRQ:
     jp vBlankRoutine
+SECTION "vBlank IRQ",ROM0[$50]
+timerIRQ:
+    jp timerRoutine
+
 SECTION "MBCDefinition",ROM0[$147]
     dw CART_MBC5
+    
 SECTION "EntryPoint",ROM0[$100]
 jp codeInit
 
@@ -27,6 +32,8 @@ main:;main loop
 vBlankRoutine:
     call DMEngineUpdate
     reti
+
+timerRoutine:
 
 include "DMGBVGM.asm"
 
