@@ -1,0 +1,4 @@
+*.exe
+.vscode/
+/gbEngine/zlib1.dll
+*.bak
