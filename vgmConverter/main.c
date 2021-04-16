@@ -79,11 +79,11 @@ int checkIfBankEnd(int currentOutputPos,int distance){//check if a given write o
 }
 
 int samplesToFrames(int engineRate,int samples){//calculate the number of frames based on number of samples
-    return (1/engineRate) / (samples/VGM_SAMPLE_RATE);
+    return (int)(((float)samples / (float)VGM_SAMPLE_RATE) / (1 / (float)engineRate));
 }
 
 
-void printBuffer(uint8_t* buffer,int size){
+void printBuffer(uint8_t* buffer,int size){//rate 44100
     for(int i = 0;i < size;i++){
         if (i % 0xF == 0){
             printf("\n%X: ",i);
@@ -164,7 +164,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                         int numberOfFrames = samplesToFrames(60,numberOfSamples);//change 60 to be scanned value later
                         currentBankBuffer[currentOutputPos] = numberOfFrames;
                         currentVgmPos++;
-                        currentOutputPos++;    
+                        currentOutputPos++; 
                     }
                     break;
                 case WAITSTDVGMCOMMAND://wait for 1 frame in 60hz engine rate
@@ -231,7 +231,9 @@ int main(int argc, char* argv[]){
     openFile(argv[1],&vgmBuffer);
     printf("OPENED\n");
     checkHeader(vgmBuffer);
+    printf("Header Check passed!\n");
     checkVgmIsDeflemask(vgmBuffer);
+    printf("Deflemask Footer check passed!\n");
     convertToNewFormat(vgmBuffer);
     free(vgmBuffer.buffer);
     return 0;
