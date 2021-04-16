@@ -1,5 +1,5 @@
 C = gcc
-outname = trashEngine.exe
+outname = DeflemaskGBVGMConverter.exe
 
 dependencies = main.c
 
