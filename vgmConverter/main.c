@@ -38,6 +38,8 @@ typedef struct VgmBuffer VgmBuffer;
 int ENGINE_RATE = 60;//default rate to 60hz
 char OUTPATH[0xFF] = "songBank";
 
+char* HELPSTRING = "DeflemaskGBGMConverter <input vgm> [args...]\n\nargs:\n-r <rate> set engine rate\n-o <outpath> set the output path";
+
 //CODE
 //===========================================================
 
@@ -236,6 +238,10 @@ void parseArgs(int argc, char** argv){
         else if(strcmp("-o",argv[i]) == 0){//output path
             i++;
             strcpy(OUTPATH,argv[i]);
+        }
+                else if(strcmp("-h",argv[i]) == 0){//output path
+            printf("%s",HELPSTRING);
+            exit(1);
         }
     }   
 
