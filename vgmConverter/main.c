@@ -4,11 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <math.h>
 //CONSTANTS
 //===========================================================
 #define DEFLEMASK_DATA_START 0xC0
 #define VGM_SAMPLE_RATE 44100//this is rate that a vgm file samples the registers
 #define GB_BANK_SIZE 0x3FFF//~16kb per bank
+#define TMA_RATE 4096//00 rate (4096hz)
 //vgm commands
 #define WRITEVGMCOMMAND 0xB3
 #define WAITSTDVGMCOMMAND 0x62 //wait for a single engine frame (1/60s)
@@ -34,11 +36,13 @@ struct VgmBuffer{//contains vgm info and file buffer for Deflemask generated GB 
     uint8_t rate;
 };
 typedef struct VgmBuffer VgmBuffer;
-
+//Globals
+//===========================================================
+int EXPORTMODE = 0;//0 = patch .gb
 int ENGINE_RATE = 60;//default rate to 60hz
-char OUTPATH[0xFF] = "songBank";
-
-char* HELPSTRING = "DeflemaskGBGMConverter <input vgm> [args...]\n\nargs:\n-r <rate> set engine rate\n-o <outpath> set the output path";
+char OUTPATH[0xFF] = "outPut";
+char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\nargs:\n-r <rate> set engine rate\n-o <outpath> set the output path\n-asm export as .bin file instead of patching .gb";
+char* PATCHROM_PATH = "patchROM.gb";
 
 //CODE
 //===========================================================
@@ -85,11 +89,29 @@ int checkIfBankEnd(int currentOutputPos,int distance){//check if a given write o
 
 int samplesToFrames(int engineRate,int samples){//calculate the number of frames based on number of samples
     float frameCount = ((float)samples / (float)VGM_SAMPLE_RATE) / (1 / (float)engineRate);
+    //printf("frameCount: %u\nengineRate: %u\nsamples: %u\n",frameCount,engineRate,samples);
     if (frameCount != (int)frameCount){
-        printf("ERROR: Frame calculation failure. Engine tick rate of %uhz is likely incorrect. Use -r argumment to change engine rate\n",ENGINE_RATE);
-        exit(1);
+        double whole;
+        float fractional = modf(frameCount, &whole);
+        if (fractional < 0.99){
+            printf("ERROR: Frame calculation failure. Engine tick rate of %uhz is likely incorrect. Use -r argumment to change engine rate\n",ENGINE_RATE);
+            exit(1);
+        }
+        whole++;
+        frameCount = whole;
     }
     return (int)frameCount;
+}
+
+int calculateTMAModulo(){//calculate the modulo value to use
+    float floatDistance = (float)TMA_RATE/(float)ENGINE_RATE;
+    double whole;
+    float fract;
+    fract = modf(floatDistance,&whole);
+    if (fract >= 0.5){
+        whole++;
+    }
+    return 0xFF-(int)whole;
 }
 
 
@@ -120,6 +142,43 @@ void writeAllBanks(uint8_t** banks,int numBanks){
         fwrite(banks[i],1,GB_BANK_SIZE,f);
         fclose(f);
     }
+}
+
+void patchROM(uint8_t** banks,int numBanks){
+    //load patch ROM into buffer
+    FILE* f;
+    f = fopen(PATCHROM_PATH,"rb");
+    fseek(f,0,SEEK_END);
+    int fileSize = ftell(f);
+    uint8_t* patchBuffer = malloc(fileSize + (numBanks + 1) * 0x4000);
+    fseek(f,0,SEEK_SET);
+    fread(patchBuffer,1,fileSize,f);
+    fclose(f);
+    //copy bank buffer 
+    for (int i = 0; i < numBanks+1; i++){
+        printf("patching bank %u, at address 0x%X\n",i+1,0x4000+i*0x4000);
+        memcpy(&patchBuffer[0x4000+i*0x4000],banks[i],0x3FFF);
+    }
+    // write TMA
+    int tmaDistance = 0;
+    if (ENGINE_RATE != 60){
+        tmaDistance = calculateTMAModulo();
+        patchBuffer[0x02] = 4;
+    }
+    else{
+        patchBuffer[0x02] = 0;
+    }
+    patchBuffer[0x01] = tmaDistance;
+
+    char outROMPath[0xFF];
+    sprintf(outROMPath,"%s.gb",OUTPATH);
+    f = fopen(outROMPath,"wb");
+    printf("SIZE %u\n",0x4000 * (fileSize + 1));
+    int outputSize = fileSize + 0x4000 * (numBanks + 1);
+    fwrite(patchBuffer,1,outputSize,f);
+    fclose(f);
+    free(patchBuffer);
+
 }
 
 void convertToNewFormat(VgmBuffer vgmBuffer){
@@ -220,28 +279,44 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
         currentBank++;
     }
     }
-    writeAllBanks(output,currentBank);
+
+    
+    if (EXPORTMODE){//if asm export mode was enabled
+        if (ENGINE_RATE != 60){
+            int tmaDistance = calculateTMAModulo();
+            printf("Non-vBlank Engine speed found, set TMA to = 0x%X\n",tmaDistance);
+        }
+        writeAllBanks(output,currentBank);       
+    }
+    else{
+        patchROM(output,currentBank);
+    }
+
     printf("Conversion Complete!\n%u banks used\n",currentBank+1);
 }
 
 void parseArgs(int argc, char** argv){
     if (argc < 2){
         printf("Must give a .vgm as argument to program\n");
+        printf("%s",HELPSTRING);
         exit(1);
     }
     for (int i = 2; i < argc; i++){
         if(strcmp("-r",argv[i]) == 0){//rate
             i++;
             ENGINE_RATE = atoi(argv[i]);
-            printf("Engine rate set to %u"),ENGINE_RATE;
+            printf("Engine rate set to %u\n"),ENGINE_RATE;
         }
         else if(strcmp("-o",argv[i]) == 0){//output path
             i++;
             strcpy(OUTPATH,argv[i]);
         }
-                else if(strcmp("-h",argv[i]) == 0){//output path
+        else if(strcmp("-h",argv[i]) == 0){//help
             printf("%s",HELPSTRING);
             exit(1);
+        }
+        else if(strcmp("-asm",argv[i]) == 0){
+            EXPORTMODE = 1;
         }
     }   
 
