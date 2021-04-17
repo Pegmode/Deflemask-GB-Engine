@@ -26,7 +26,7 @@
 //ENGINE VARS
 //===========================================================
 #define DATA_START_BANK 0x01
-#define DEFAULT_SYNC_HIGH_ADDRESS 0xFA//change this to change where the sync signal writes to 
+#define DEFAULT_SYNC_HIGH_ADDRESS 0x80//change this to change where the sync signal writes to 
 #define MAX_DATABANKS 0xFF//must be less than or equal to what the asm engine is designed to handle and never greater than 0xFF
 
 
@@ -40,7 +40,7 @@ typedef struct VgmBuffer VgmBuffer;
 //===========================================================
 int EXPORTMODE = 0;//0 = patch .gb
 int ENGINE_RATE = 60;//default rate to 60hz
-char OUTPATH[0xFF] = "outPut";
+char OUTPATH[0xFF] = "output";
 char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\nargs:\n-r <rate> set engine rate\n-o <outpath> set the output path\n-asm export as .bin file instead of patching .gb";
 char* PATCHROM_PATH = "patchROM.gb";
 
@@ -249,13 +249,15 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     break;
 
                 case DATABLOCKVGMCOMMAND://write data to 0xFF<SYNC_ADDRESS> +=9
-                    if (checkIfBankEnd(currentOutputPos,2)){
+                    if (checkIfBankEnd(currentOutputPos,3)){
                         notEndOfBank = 0;    
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND;
                     }
                     else{
                         currentVgmPos += 9;//jump to data block value
                         currentBankBuffer[currentOutputPos] = WRITECUSCOMMAND;
+                        currentOutputPos++;
+                        currentBankBuffer[currentOutputPos] = DEFAULT_SYNC_HIGH_ADDRESS;
                         currentOutputPos++;
                         currentBankBuffer[currentOutputPos] = vgmBuffer.buffer[currentVgmPos];
                         currentVgmPos++;
