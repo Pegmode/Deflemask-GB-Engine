@@ -15,7 +15,7 @@ note: **REQUIRES patchROM.gb**
 * `-asm` export song data as .bin to include in a GB rom.
 
 #### .bin export
-include all exported .bin files in your asm ROM. Each .bin takes up an entire ROM bank.  
+include all exported .bin files in your asm ROM. Each .bin takes up an entire ROM bank. Make sure each sound bank is beside another (eg: ahoy1 should be one bank after ahoy0).
 
 example:
 ```
