@@ -48,7 +48,7 @@ char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
 \nargs:\n\
 -r <rate> set engine rate\n\
 -o <outpath> set the output path\n\
--asm export as .bin file instead of patching .gb\n\
+-bin export as .bin file instead of patching .gb\n\
 -ti <offset> increase tma offset timing (speed up song if using custom engine speed)\n\
 -td <offset> decrease tma offset timing (slow down song if using custom engine speed)\n";
 
@@ -325,7 +325,7 @@ void parseArgs(int argc, char** argv){
             printf("%s",HELPSTRING);
             exit(1);
         }
-        else if(strcmp("-asm",argv[i]) == 0){
+        else if(strcmp("-bin",argv[i]) == 0){//
             EXPORTMODE = 1;
         }
         else if(strcmp("-td",argv[i]) == 0){//tma decrease
