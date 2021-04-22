@@ -12,7 +12,9 @@ note: **REQUIRES patchROM.gb**
 ### arguments
 * `-r <engine rate>` set the engine rate in Hz (Clock value in Deflemask). Required if you use a engine tick speed other than NTSC.
 * `-o <output path>` set the output filename (defaults to "out")
-* `-asm` export song data as .bin to include in a GB rom.
+* `-bin` export song data as .bin to include in a GB rom.
+* `-ti <offset>` increase tma offset timing (speed up song if using custom engine speed).
+* `-td <offset>` decrease tma offset timing (slow down song if using custom engine speed).
 
 #### .bin export
 include all exported .bin files in your asm ROM. Each .bin takes up an entire ROM bank. Make sure each sound bank is beside another (eg: ahoy1 should be one bank after ahoy0).
