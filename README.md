@@ -3,7 +3,32 @@ Custom Deflemask .vgm based playback engine for the Nintendo Game Boy.
 
 **this engine only works Deflemask generated .vgms and is not intended for other .vgms**
 
-# Register Dump command format
+
+## Usage
+1. Download the latest release [here](https://github.com/Pegmode/-DeflemaskGBVGM-/releases)  
+2. run DeflemaskGBVGMConverter.exe like this  
+`DeflemaskGBVGMConverter.exe <.vgm file> [arguments...]`  
+note: **REQUIRES patchROM.gb**
+### arguments
+* `-r <engine rate>` set the engine rate in Hz (Clock value in Deflemask). Required if you use a engine tick speed other than NTSC.
+* `-o <output path>` set the output filename (defaults to "out")
+* `-asm` export song data as .bin to include in a GB rom.
+
+#### .bin export
+include all exported .bin files in your asm ROM. Each .bin takes up an entire ROM bank. Make sure each sound bank is beside another (eg: ahoy1 should be one bank after ahoy0).
+
+example:
+```
+SECTION "SoundData0",ROMX,BANK[1]
+incbin "ExampleData/ahoy/ahoy0.bin
+....
+....
+SECTION "SoundData9",ROMX,BANK[10]
+incbin "ExampleData/ahoy/ahoy9.bin"
+```
+
+
+## Register Dump command format
 Commands are formatted so that each bit is a flag that represents a command.
 ### Format Description
 
@@ -16,4 +41,5 @@ Commands are formatted so that each bit is a flag that represents a command.
 | End song | 0x08 |  |  |
 
 #### Sync command
-Sync signals use the 0x80 (write high) command to write their values to the address specified in `DEFAULT_SYNC_HIGH_ADDRESS`in the converter (default `0xFA`). In deflemask use the `EExx` command to write the value xx to `DEFAULT_SYNC_HIGH_ADDRESS`.
+Sync signals write to HRAM with the address specified in `DEFAULT_SYNC_HIGH_ADDRESS` in the converter (default `0x80`). In deflemask use the `EExx` command to write the value xx to `DEFAULT_SYNC_HIGH_ADDRESS`.
+
