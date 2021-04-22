@@ -41,8 +41,16 @@ typedef struct VgmBuffer VgmBuffer;
 int EXPORTMODE = 0;//0 = patch .gb
 int ENGINE_RATE = 60;//default rate to 60hz
 char OUTPATH[0xFF] = "output";
-char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\nargs:\n-r <rate> set engine rate\n-o <outpath> set the output path\n-asm export as .bin file instead of patching .gb";
 char* PATCHROM_PATH = "patchROM.gb";
+int TMA_OFFSET = 0;//value to add to TMA for fine control
+
+char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
+\nargs:\n\
+-r <rate> set engine rate\n\
+-o <outpath> set the output path\n\
+-asm export as .bin file instead of patching .gb\n\
+-ti <offset> increase tma offset timing (speed up song if using custom engine speed)\n\
+-td <offset> decrease tma offset timing (slow down song if using custom engine speed)\n";
 
 //CODE
 //===========================================================
@@ -168,12 +176,12 @@ void patchROM(uint8_t** banks,int numBanks){
     else{
         patchBuffer[0x02] = 0;
     }
-    patchBuffer[0x01] = tmaDistance;
+    patchBuffer[0x01] = tmaDistance + TMA_OFFSET;
 
     char outROMPath[0xFF];
     sprintf(outROMPath,"%s.gb",OUTPATH);
     f = fopen(outROMPath,"wb");
-    printf("SIZE %u\n",0x4000 * (fileSize + 1));
+    printf("Output Size: %ubytes\n",0x4000 * (fileSize + 1));
     int outputSize = fileSize + 0x4000 * (numBanks + 1);
     fwrite(patchBuffer,1,outputSize,f);
     fclose(f);
@@ -319,6 +327,12 @@ void parseArgs(int argc, char** argv){
         }
         else if(strcmp("-asm",argv[i]) == 0){
             EXPORTMODE = 1;
+        }
+        else if(strcmp("-td",argv[i]) == 0){//tma decrease
+            TMA_OFFSET = -atoi(argv[++i]);
+        }
+        else if(strcmp("-ti",argv[i]) == 0){//tma increase
+            TMA_OFFSET = atoi(argv[++i]);
         }
     }   
 
