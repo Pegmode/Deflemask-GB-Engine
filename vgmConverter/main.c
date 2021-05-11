@@ -37,6 +37,13 @@ struct VgmBuffer{//contains vgm info and file buffer for Deflemask generated GB 
     uint8_t rate;
 };
 typedef struct VgmBuffer VgmBuffer;
+
+struct LoopInfo{//contains address and bank info for looping
+    int gbLoopAddress;
+    int gbLoopBank;
+};
+typedef struct LoopInfo LoopInfo;
+
 //Globals
 //===========================================================
 int EXPORTMODE = 0;//0 = patch .gb
@@ -159,7 +166,7 @@ void writeAllBanks(uint8_t** banks,int numBanks){
     }
 }
 
-void patchROM(uint8_t** banks,int numBanks){
+void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
     //load patch ROM into buffer
     FILE* f;
     f = fopen(PATCHROM_PATH,"rb");
@@ -197,6 +204,7 @@ void patchROM(uint8_t** banks,int numBanks){
 }
 
 void convertToNewFormat(VgmBuffer vgmBuffer){
+    LoopInfo loopInfo;
     int currentVgmPos = DEFLEMASK_DATA_START;
     int currentBank = 0;//NOT TRUE BANK, is position in output array
     int currentOutputPos = 0;
@@ -211,6 +219,11 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
         currentOutputPos = 0;
         int notEndOfBank = 1 ;
         while(notEndOfBank){
+            if (currentVgmPos == LOOPVGMADDR){//checkForLoop
+                printf("loop found!\n");
+                loopInfo.gbLoopAddress = currentOutputPos;
+                loopInfo.gbLoopBank = currentBank+ DATA_START_BANK;
+            }
             switch(vgmBuffer.buffer[currentVgmPos]){
                 case WRITEVGMCOMMAND://write to 0xFFXX
                     if (checkIfBankEnd(currentOutputPos,3)){
@@ -306,7 +319,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
         writeAllBanks(output,currentBank);       
     }
     else{
-        patchROM(output,currentBank);
+        patchROM(output,currentBank, loopInfo);
     }
 
     printf("Conversion Complete!\n%u banks used\n",currentBank+1);
