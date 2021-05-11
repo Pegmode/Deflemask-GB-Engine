@@ -6,6 +6,11 @@ SECTION "TMA VALUES",ROM0[$1]
 ;use patcher to change these values, set tmaTac to 0 to disable 
 tmaMod: db $C3 
 tmaTac: db %100;4096 hz
+;loopAddress: ds 2,0
+;loopBank: ds 2,0
+loopAddress: dw $5102
+loopBank: db 0,$1
+
 db "DMGBVGM by Pegmode"
 
 SECTION "vBlank IRQ",ROM0[$40]
@@ -56,3 +61,9 @@ timerRoutine:
 
 include "DMGBVGM.asm"
 
+SECTION "SoundData0",ROMX,BANK[1]
+incbin "ExampleData/rockman/rockm0.bin"
+SECTION "SoundData1",ROMX,BANK[2]
+incbin "ExampleData/rockman/rockm1.bin"
+SECTION "SoundData2",ROMX,BANK[3]
+incbin "ExampleData/rockman/rockm2.bin"

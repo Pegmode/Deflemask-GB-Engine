@@ -81,6 +81,19 @@ DMEngineUpdate:
 .checkLoop;unimplemented
     bit 4,a
     jr z,.checkEndSong
+    ;load new bank
+    ld hl, loopBank
+    ld a, [hl+]
+    ld [CurrentSoundBankHigh],a
+    ld a, [hl]
+    ld [CurrentSoundBankLow],a
+    ;load new Address
+    ld hl, loopAddress
+    ld a, [hl+]
+    ld [VgmLookupPointerLow],a
+    ld a, [hl]
+    ld [VgmLookupPointerHigh],a
+    ret
 .checkEndSong
     bit 3,a
     jr z,.errorInCheck

@@ -214,8 +214,9 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
         while(notEndOfBank){
             if (currentVgmPos == LOOPVGMADDR){//checkForLoop
                 printf("loop found!\n");
-                loopInfo.gbLoopAddress = currentOutputPos;
+                loopInfo.gbLoopAddress = currentOutputPos + 0x4000;
                 loopInfo.gbLoopBank = currentBank+ DATA_START_BANK;
+                printf("DEBUG loop adr %X\nloopBank %X\n",loopInfo.gbLoopAddress,loopInfo.gbLoopBank);
             }
             switch(vgmBuffer.buffer[currentVgmPos]){
                 case WRITEVGMCOMMAND://write to 0xFFXX
@@ -287,7 +288,14 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     break;
                 case ENDVGMCOMMAND://end the song
                     printf("VGM end found!\n");
-                    currentBankBuffer[currentOutputPos] = ENDSONGCUSCOMMAND;//write new command
+                    if (LOOPVGMADDR == 0){
+                        currentBankBuffer[currentOutputPos] = ENDSONGCUSCOMMAND;//write new command
+
+                    }
+                    else{
+                        currentBankBuffer[currentOutputPos] = LOOPCUSCOMMAND;//write new command
+
+                    }
                     currentOutputPos++;
                     notEndOfBank = 0;
                     notEndOfFile = 0;
