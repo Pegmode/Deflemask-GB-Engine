@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <math.h>
+#include "patchrom.h"
 //CONSTANTS
 //===========================================================
 #define DEFLEMASK_DATA_START 0xC0
@@ -43,6 +44,7 @@ int ENGINE_RATE = 60;//default rate to 60hz
 char OUTPATH[0xFF] = "output";
 char* PATCHROM_PATH = "patchROM.gb";
 int TMA_OFFSET = 0;//value to add to TMA for fine control
+int LOOPVGMADDR = 0;//loop address in .vgm file 0 = no loop
 
 char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
 \nargs:\n\
@@ -84,6 +86,11 @@ void checkHeader(VgmBuffer vgmBuffer){
         printf(".vgm does not use Game Boy\n");
         exit(0);
     }
+    //copy loop value
+    int loopVal;
+    memcpy(&loopVal,&vgmBuffer.buffer[0x1C],4);
+    loopVal += 0x1C;//calculate offset val
+    LOOPVGMADDR = loopVal;
 }
 
 int checkIfBankEnd(int currentOutputPos,int distance){//check if a given write operation to the output buffer will fall outside a Game Boy ROM bank
