@@ -84,9 +84,9 @@ DMEngineUpdate:
     ;load new bank
     ld hl, loopBank
     ld a, [hl+]
-    ld [CurrentSoundBankHigh],a
-    ld a, [hl]
     ld [CurrentSoundBankLow],a
+    ld a, [hl]
+    ld [CurrentSoundBankHigh],a
     ;load new Address
     ld hl, loopAddress
     ld a, [hl+]

@@ -1,4 +1,4 @@
-//by Pegmode
+//by Pegmode 
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -174,7 +174,7 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
     for (int i = 0; i < numBanks+1; i++){
         memcpy(&patchBuffer[0x4000+i*0x4000],banks[i],0x3FFF);
     }
-    // write TMA
+    // write TMA 
     int tmaDistance = 0;
     if (ENGINE_RATE != 60){
         tmaDistance = calculateTMAModulo();
@@ -183,6 +183,12 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
     else{
         patchBuffer[0x02] = 0;
     }
+    //write loop data
+    if (LOOPVGMADDR != 0){
+        memcpy(&patchBuffer[0x03],&loopInfo.gbLoopAddress,2);
+        memcpy(&patchBuffer[0x05],&loopInfo.gbLoopBank,2);
+    }
+
     patchBuffer[0x01] = tmaDistance + TMA_OFFSET;
 
     char outROMPath[0xFF];
