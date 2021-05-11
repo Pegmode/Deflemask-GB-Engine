@@ -8,7 +8,6 @@ Custom Deflemask .vgm based playback engine for the Nintendo Game Boy.
 1. Download the latest release [here](https://github.com/Pegmode/-DeflemaskGBVGM-/releases)  
 2. run DeflemaskGBVGMConverter.exe like this  
 `DeflemaskGBVGMConverter.exe <.vgm file> [arguments...]`  
-note: **REQUIRES patchROM.gb**
 ### arguments
 * `-r <engine rate>` set the engine rate in Hz (Clock value in Deflemask). Required if you use a engine tick speed other than NTSC.
 * `-o <output path>` set the output filename (defaults to "out")
