@@ -2,6 +2,8 @@
 set project_name=DMGBVGM
 set bgb="E:\Gb Dev\emu\BGB64.exe"
 
+TASKKILL /IM "BGB64.exe" /F 2>NUL
+
 rgbasm -o%project_name%.obj main.asm
 if %errorlevel% neq 0 call :exit 1
 rgblink -m%project_name%.map -n%project_name%.sym -o%project_name%.gb %project_name%.obj
