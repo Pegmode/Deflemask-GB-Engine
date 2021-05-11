@@ -168,17 +168,10 @@ void writeAllBanks(uint8_t** banks,int numBanks){
 
 void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
     //load patch ROM into buffer
-    FILE* f;
-    f = fopen(PATCHROM_PATH,"rb");
-    fseek(f,0,SEEK_END);
-    int fileSize = ftell(f);
-    uint8_t* patchBuffer = malloc(fileSize + (numBanks + 1) * 0x4000);
-    fseek(f,0,SEEK_SET);
-    fread(patchBuffer,1,fileSize,f);
-    fclose(f);
+    uint8_t* patchBuffer = malloc(gb_patch_rom_length + (numBanks + 1) * 0x4000);
+    memcpy(patchBuffer, gb_patch_rom, gb_patch_rom_length);
     //copy bank buffer 
     for (int i = 0; i < numBanks+1; i++){
-        printf("patching bank %u, at address 0x%X\n",i+1,0x4000+i*0x4000);
         memcpy(&patchBuffer[0x4000+i*0x4000],banks[i],0x3FFF);
     }
     // write TMA
@@ -194,9 +187,9 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
 
     char outROMPath[0xFF];
     sprintf(outROMPath,"%s.gb",OUTPATH);
-    f = fopen(outROMPath,"wb");
-    printf("Output Size: %ubytes\n",0x4000 * (fileSize + 1));
-    int outputSize = fileSize + 0x4000 * (numBanks + 1);
+    FILE* f = fopen(outROMPath,"wb");
+    printf("GB ROM final output Size: %ubytes\n",0x4000 * (gb_patch_rom_length + 1));
+    int outputSize = gb_patch_rom_length + 0x4000 * (numBanks + 1);
     fwrite(patchBuffer,1,outputSize,f);
     fclose(f);
     free(patchBuffer);
