@@ -94,8 +94,12 @@ void checkHeader(VgmBuffer vgmBuffer){
         exit(0);
     }
     //copy loop value
-    int loopVal;
-    memcpy(&loopVal,&vgmBuffer.buffer[0x1C],4);
+    int loopVal = 0;
+    int loopSamples;//use for detecting legacy
+    memcpy(&loopSamples,&vgmBuffer.buffer[0x20],4);
+    if (loopSamples != 0){//check for legacy Deflemask .vgm bug
+        memcpy(&loopVal,&vgmBuffer.buffer[0x1C],4);
+    }
     if(loopVal > 0x1C){
         loopVal += 0x1C;//calculate offset val
     }
