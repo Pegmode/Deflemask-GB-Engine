@@ -96,7 +96,9 @@ void checkHeader(VgmBuffer vgmBuffer){
     //copy loop value
     int loopVal;
     memcpy(&loopVal,&vgmBuffer.buffer[0x1C],4);
-    loopVal += 0x1C;//calculate offset val
+    if(loopVal > 0x1C){
+        loopVal += 0x1C;//calculate offset val
+    }
     LOOPVGMADDR = loopVal;
 }
 
