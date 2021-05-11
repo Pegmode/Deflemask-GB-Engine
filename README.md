@@ -38,7 +38,7 @@ Commands are formatted so that each bit is a flag that represents a command.
 | Write 0xij to FFxy (LDH xy ij) | 0x80  | xy address value | Data ij |
 | Wait for xy frames | 0x40 | wait time xy |  |
 | Go to next ROM bank | 0x20 |  |  |
-| Loop to (unfinished) | 0x10 |  |  |
+| Loop to loop adddress and bank | 0x10 |  |  |
 | End song | 0x08 |  |  |
 
 #### Sync command
