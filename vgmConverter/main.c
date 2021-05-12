@@ -315,7 +315,8 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     }
                     else{
                         if(ENGINE_RATE != 50){
-                            printf("WARNING: PAL wait tick found in non PAL timed module! Did you enter the correct engine speed?");
+                            printf("Error: PAL wait tick found in non PAL timed module! Did you enter the correct engine speed?\n");
+                            exit(1);
                         }
                         currentBankBuffer[currentOutputPos] = WAITCUSCOMMAND;//write new command
                         currentOutputPos++;
