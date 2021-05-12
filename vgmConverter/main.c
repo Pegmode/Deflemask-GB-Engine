@@ -14,7 +14,10 @@
 #define DEFLEMASK_DATA_START 0xC0
 #define VGM_SAMPLE_RATE 44100//this is rate that a vgm file samples the registers
 #define GB_BANK_SIZE 0x3FFF//~16kb per bank
-#define TMA_RATE 4096//00 rate (4096hz)
+#define TMA_RATE0 4096//TMA rate in hz
+#define TMA_RATE1 262144//TMA rate in hz
+#define TMA_RATE2 65536//TMA rate in hz
+#define TMA_RATE3 16384//TMA rate in hz
 //vgm commands
 #define WRITEVGMCOMMAND 0xB3
 #define WAITSTDVGMCOMMAND 0x62 //wait for a single engine frame (1/60s)
@@ -73,7 +76,7 @@ uint8_t vgmToGBTL(uint8_t value){//translate vgm write command destination addre
     return value + 0x10;
 }
 
-void printfLibless(char* format,...){//printf only when LIB_MODE = 0 for Deflemask support
+void printfLibless(char* format,...){//printf only when LIB_MODE = 0 for Deflemask support requested by Delek
 #if LIB_MODE
     return;
 #else
@@ -84,7 +87,7 @@ void printfLibless(char* format,...){//printf only when LIB_MODE = 0 for Deflema
 #endif
 }
 
-void sprintfLibless(char* format,...){//sprintf only when LIB_MODE = 0 for Deflemask support
+void sprintfLibless(char* format,...){//sprintf only when LIB_MODE = 0 for Deflemask support requested by Delek
 #if LIB_MODE
     return;
 #else
@@ -158,8 +161,8 @@ int samplesToFrames(int engineRate,int samples){//calculate the number of frames
     return (int)frameCount;
 }
 
-int calculateTMAModulo(){//calculate the modulo value to use
-    float floatDistance = (float)TMA_RATE/(float)ENGINE_RATE;
+int calculateTMAModulo(int tmaRate){//calculate the modulo value to use
+    float floatDistance = (float)tmaRate/(float)ENGINE_RATE;
     double whole;
     float fract;
     fract = modf(floatDistance,&whole);
@@ -201,7 +204,7 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
     // write TMA 
     int tmaDistance = 0;
     if (ENGINE_RATE != 60){
-        tmaDistance = calculateTMAModulo();
+        tmaDistance = calculateTMAModulo(TMA_RATE0);
         patchBuffer[0x02] = 4;
     }
     else{
@@ -367,7 +370,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
     
     if (EXPORTMODE){//if asm export mode was enabled
         if (ENGINE_RATE != 60){
-            int tmaDistance = calculateTMAModulo();
+            int tmaDistance = calculateTMAModulo(TMA_RATE0);
             printfLibless("Non-vBlank Engine speed found, set TMA to = 0x%X\n",tmaDistance);
         }
         writeAllBanks(output,currentBank);       
