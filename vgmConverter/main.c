@@ -20,6 +20,7 @@
 #define WAITVGMCOMMAND 0x61 //wait for xy vgm frames (1/VGM_SAMPLE_RATE)
 #define ENDVGMCOMMAND 0x66
 #define DATABLOCKVGMCOMMAND 0x67
+#define WAITPALCOMMAND 0x63//wait for a PAL engine frame (legal in Deflemask)
 //custom GB engine commands
 #define WRITECUSCOMMAND 0x80//7th bit 
 #define WAITCUSCOMMAND 0x40
@@ -307,6 +308,22 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                         currentOutputPos++;
                     }
                     break;
+                case WAITPALCOMMAND:
+                    if (checkIfBankEnd(currentOutputPos,1)){
+                        notEndOfBank = 0;   
+                        currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND; 
+                    }
+                    else{
+                        if(ENGINE_RATE != 50){
+                            printf("WARNING: PAL wait tick found in non PAL timed module! Did you enter the correct engine speed?");
+                        }
+                        currentBankBuffer[currentOutputPos] = WAITCUSCOMMAND;//write new command
+                        currentOutputPos++;
+                        currentBankBuffer[currentOutputPos] = 1;
+                        currentVgmPos++;
+                        currentOutputPos++;
+                    }
+                break;
                 case ENDVGMCOMMAND://end the song
                     printf("VGM end found!\n");
                     if (LOOPVGMADDR == 0){

@@ -70,12 +70,12 @@ loadText:
     ld de, $600
     call MemCopyLong
     ld bc,textData1
-    ld hl,$9800
+    ld hl,$9C00
     call writeText
     ld bc,textData2
-    ld hl,$9800 + $20
+    ld hl,$9C00 + $20
     call writeText
-    ld a, %10010001
+    ld a, %10011001
     ld [rLCDC], a
     ret
 
