@@ -259,7 +259,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     }                                       
                     break;
                 case WAITVGMCOMMAND://wait for XX frames
-                    if (checkIfBankEnd(currentOutputPos,2)){
+                    if (checkIfBankEnd(currentOutputPos,3)){
                         notEndOfBank = 0;    
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND;
                     }
@@ -279,7 +279,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     }
                     break;
                 case WAITSTDVGMCOMMAND://wait for 1 frame in 60hz engine rate
-                    if (checkIfBankEnd(currentOutputPos,1)){
+                    if (checkIfBankEnd(currentOutputPos,3)){
                         notEndOfBank = 0;   
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND; 
                     }
@@ -309,7 +309,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     }
                     break;
                 case WAITPALCOMMAND:
-                    if (checkIfBankEnd(currentOutputPos,1)){
+                    if (checkIfBankEnd(currentOutputPos,3)){
                         notEndOfBank = 0;   
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND; 
                     }
