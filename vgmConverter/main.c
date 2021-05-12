@@ -375,13 +375,13 @@ void parseArgs(int argc, char** argv){
         if(strcmp("-r",argv[i]) == 0){//rate
             i++;
             ENGINE_RATE = atoi(argv[i]);
-            printf("Engine rate set to %u\n"),ENGINE_RATE;
+            printf("Engine rate set to %u\n",ENGINE_RATE);
         }
         else if(strcmp("-o",argv[i]) == 0){//output path
             i++;
             strcpy(OUTPATH,argv[i]);
         }
-        else if(strcmp("-h",argv[i]) == 0){//help
+        else if(strcmp("-h",argv[i]) == 0){//help 
             printf("%s",HELPSTRING);
             exit(1);
         }
