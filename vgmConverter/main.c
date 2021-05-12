@@ -386,3 +386,17 @@ int main(int argc, char* argv[]){
     free(vgmBuffer.buffer);
     return 0;
 }
+
+int gbvgm(char *vgm_source_path, int hz, char* romPath){  // For .gb creation in library mode
+    EXPORTMODE = 0;
+    TMA_OFFSET = 0;
+    ENGINE_RATE = hz;
+    strcpy(OUTPATH,romPath);
+    VgmBuffer vgmBuffer;
+    openFile(vgm_source_path,&vgmBuffer);
+    checkHeader(vgmBuffer);
+    checkVgmIsDeflemask(vgmBuffer);
+    convertToNewFormat(vgmBuffer);
+    free(vgmBuffer.buffer);
+    return 0;
+}
