@@ -3,9 +3,10 @@
 *.sym
 *.map
 *.obj
+*.gb
 .vscode/
 /gbEngine/zlib1.dll
 /vgmConverter/*.bin
 /vgmConverter/*.vgm
 /vgmConverter/*.gb
-!/vgmConverter/patchROM.gb
+/tools/*.h
