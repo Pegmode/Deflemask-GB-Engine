@@ -100,6 +100,7 @@ DMEngineUpdate:
     ;No need to set up registers for quiet status. should be done in tracker via envelopes, OFF or ECxx
     xor a
     ld [SoundStatus],a
+    call resetSound
     jr .endFrame
 .errorInCheck
     ;handle stuff
@@ -109,4 +110,26 @@ DMEngineUpdate:
     ld [VgmLookupPointerHigh],a
     ld a, l
     ld [VgmLookupPointerLow],a
+    ret
+
+resetSound:
+    xor a
+    ldh [$10], a
+    ldh [$12], a
+    ldh [$17], a
+    ldh [$22], a
+    ldh [$11], a
+    ldh [$11], a
+    ldh [$16], a
+    ldh [$1A], a
+    ld a, $8f
+    ldh [$26], a
+    ld a, $FF
+    ldh [$25], a
+    ld a, $77
+    ldh [$24], a
+    ld a, $20
+    ldh [$1C], a
+    ld a, $F7
+    ldh [$21], a
     ret

@@ -1,4 +1,6 @@
-//by Pegmode 
+//by Pegmode
+
+#define LIB_MODE 0//flag to disable main/ enable library call
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -60,6 +62,7 @@ char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
 -bin export as .bin file instead of patching .gb\n\
 -ti <offset> increase tma offset timing (speed up song if using custom engine speed)\n\
 -td <offset> decrease tma offset timing (slow down song if using custom engine speed)\n";
+
 
 //CODE
 //===========================================================
@@ -199,6 +202,12 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
 
     char outROMPath[0xFF];
     sprintf(outROMPath,"%s.gb",OUTPATH);
+    if(OUTPATH[strlen(OUTPATH)-3]!='.'){
+        sprintf(outROMPath,"%s.gb",OUTPATH);
+    }
+    else{//deflemask call compatibility 
+        sprintf(outROMPath,"%s",OUTPATH);
+    }
     FILE* f = fopen(outROMPath,"wb");
     printf("GB ROM final output Size: %ubytes\n",0x4000 * (gb_patch_rom_length + 1));
     int outputSize = gb_patch_rom_length + 0x4000 * (numBanks + 1);
@@ -370,7 +379,21 @@ void parseArgs(int argc, char** argv){
     }   
 
 }
-
+#if LIB_MODE
+int gbvgm(char *vgm_source_path, int hz, char* romPath){  // For .gb creation in library mode
+    EXPORTMODE = 0;
+    TMA_OFFSET = 0;
+    ENGINE_RATE = hz;
+    strcpy(OUTPATH,romPath);
+    VgmBuffer vgmBuffer;
+    openFile(vgm_source_path,&vgmBuffer);
+    checkHeader(vgmBuffer);
+    checkVgmIsDeflemask(vgmBuffer);
+    convertToNewFormat(vgmBuffer);
+    free(vgmBuffer.buffer);
+    return 0;
+}
+#else
 int main(int argc, char* argv[]){
     parseArgs(argc,argv);
     printf("RUNNING\n");
@@ -386,17 +409,4 @@ int main(int argc, char* argv[]){
     free(vgmBuffer.buffer);
     return 0;
 }
-
-int gbvgm(char *vgm_source_path, int hz, char* romPath){  // For .gb creation in library mode
-    EXPORTMODE = 0;
-    TMA_OFFSET = 0;
-    ENGINE_RATE = hz;
-    strcpy(OUTPATH,romPath);
-    VgmBuffer vgmBuffer;
-    openFile(vgm_source_path,&vgmBuffer);
-    checkHeader(vgmBuffer);
-    checkVgmIsDeflemask(vgmBuffer);
-    convertToNewFormat(vgmBuffer);
-    free(vgmBuffer.buffer);
-    return 0;
-}
+#endif
