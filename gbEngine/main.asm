@@ -92,7 +92,7 @@ writeText:
     ret
 
 textData1:
-    db "DMGBVGM v0.4"
+    db "DeflemaskGBVGM v0.4"
     db 0
 
 textData2:
