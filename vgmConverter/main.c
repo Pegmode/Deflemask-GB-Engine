@@ -1,4 +1,4 @@
-//by Pegmode
+//by Pegmode 
 
 #define LIB_MODE 0//flag to disable main/ enable library call
 
