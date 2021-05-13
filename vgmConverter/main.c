@@ -223,7 +223,7 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
     if(OUTPATH[strlen(OUTPATH)-3]!='.'){
         sprintf(outROMPath,"%s.gb",OUTPATH);
     }
-    else{//deflemask call compatibility 
+    else{//deflemask call compatibility  
         sprintf(outROMPath,"%s",OUTPATH);
     }
     FILE* f = fopen(outROMPath,"wb");
