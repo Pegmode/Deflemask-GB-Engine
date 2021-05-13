@@ -17,7 +17,7 @@
 #define TMA_RATE0 4096//TMA rate in hz
 #define TMA_RATE1 262144//TMA rate in hz
 #define TMA_RATE2 65536//TMA rate in hz
-#define TMA_RATE3 16384//TMA rate in hz
+#define TMA_RATE3 16384
 //vgm commands
 #define WRITEVGMCOMMAND 0xB3
 #define WAITSTDVGMCOMMAND 0x62 //wait for a single engine frame (1/60s)
@@ -186,7 +186,7 @@ void checkVgmIsDeflemask(VgmBuffer vgmBuffer){
 void writeAllBanks(uint8_t** banks,int numBanks){
     char outputName[0xFF];
     for(int i = 0; i <= numBanks; i++){
-        sprintfLibless(outputName,"%s%u.bin",OUTPATH,i);
+        sprintf(outputName,"%s%u.bin",OUTPATH,i);
         FILE *f = fopen(outputName,"wb");
         fwrite(banks[i],1,GB_BANK_SIZE,f);
         fclose(f);
@@ -219,12 +219,12 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
     patchBuffer[0x01] = tmaDistance + TMA_OFFSET;
 
     char outROMPath[0xFF];
-    sprintfLibless(outROMPath,"%s.gb",OUTPATH);
+    sprintf(outROMPath,"%s.gb",OUTPATH);
     if(OUTPATH[strlen(OUTPATH)-3]!='.'){
-        sprintfLibless(outROMPath,"%s.gb",OUTPATH);
+        sprintf(outROMPath,"%s.gb",OUTPATH);
     }
     else{//deflemask call compatibility 
-        sprintfLibless(outROMPath,"%s",OUTPATH);
+        sprintf(outROMPath,"%s",OUTPATH);
     }
     FILE* f = fopen(outROMPath,"wb");
     printfLibless("GB ROM final output Size: %ubytes\n",0x4000 * (gb_patch_rom_length + 1));
