@@ -1,5 +1,5 @@
 # -DeflemaskGBVGM-
-Custom Deflemask .vgm based playback engine for the Nintendo Game Boy.
+Custom Deflemask .vgm based playback engine for the Nintendo Game Boy. Now the official Deflemask ROM exporter as of v1.0.3.  
 
 **this engine only works Deflemask generated .vgms and is not intended for other .vgms**
 
