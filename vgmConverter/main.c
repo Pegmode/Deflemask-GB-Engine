@@ -118,7 +118,7 @@ void checkHeader(VgmBuffer vgmBuffer){
         exit(0);
     }
     //check gb
-    uint8_t gbEmptyVal = 0;
+    int gbEmptyVal = 0;
     if (memcmp(&vgmBuffer.buffer[0x80],&gbEmptyVal,4) == 0){
         printfLibless(".vgm does not use Game Boy\n");
         exit(0);
