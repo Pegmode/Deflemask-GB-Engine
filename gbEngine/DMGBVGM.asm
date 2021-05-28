@@ -122,6 +122,7 @@ resetSound:
     ldh [$11], a
     ldh [$16], a
     ldh [$1A], a
+    ldh [$21], a
     ld a, $8f
     ldh [$26], a
     ld a, $FF

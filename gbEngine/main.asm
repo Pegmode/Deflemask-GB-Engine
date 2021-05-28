@@ -61,7 +61,7 @@ timerRoutine:
     reti
 
 loadText:
-    call WaitBlank
+    call WaitVBlank
     xor a
     ld [rLCDC], a
     call LoadNormalPallet
@@ -92,7 +92,7 @@ writeText:
     ret
 
 textData1:
-    db "DeflemaskGBVGM v0.4"
+    db "DeflemaskGBVGM v0.5"
     db 0
 
 textData2:
