@@ -31,6 +31,8 @@ SECTION "SoundData9",ROMX,BANK[10]
 incbin "ExampleData/ahoy/ahoy9.bin"
 ```
 
+## Projects that use this engine
+- [Marine AhoyGB](https://github.com/Pegmode/MarineAhoyGB)
 
 ## Register Dump command format
 Commands are formatted so that each bit is a flag that represents a command.
