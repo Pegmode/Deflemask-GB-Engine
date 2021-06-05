@@ -5,7 +5,7 @@ Custom Deflemask .vgm based playback engine for the Nintendo Game Boy. Now the o
 
 supports `EExx` event commands from Delfemask and uses proper engine timings instead of .vgm update timings. Converter converts .vgm to either .bin or .gb.
 
-*"High on time efficentcy, low on space efficiency."*
+*"High on time efficiency, low on space efficiency."*
 
 ## Usage
 1. Download the latest release [here](https://github.com/Pegmode/-DeflemaskGBVGM-/releases)  
