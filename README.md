@@ -22,7 +22,7 @@ supports `EExx` event commands from Delfemask and uses proper engine timings ins
 include all exported .bin files in your asm ROM. Each .bin takes up an entire ROM bank. Make sure each sound bank is beside another (eg: ahoy1 should be one bank after ahoy0).
 
 example:
-```
+```asm
 SECTION "SoundData0",ROMX,BANK[1]
 incbin "ExampleData/ahoy/ahoy0.bin
 ....
