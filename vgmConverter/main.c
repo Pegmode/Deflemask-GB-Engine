@@ -119,7 +119,10 @@ void openFile(char* path,VgmBuffer* vgmBuffer){
     int fileSize = ftell(f);
     vgmBuffer->buffer = malloc(fileSize);
     fseek(f,0,SEEK_SET);
-    fread(vgmBuffer->buffer,1,fileSize,f);
+    if(fread(vgmBuffer->buffer,1,fileSize,f) < 1){
+        //womp womp
+        printfLibless("Error: VGM file had issue opening\n");
+    }
     fclose(f);
     vgmBuffer->size = fileSize;
 }
