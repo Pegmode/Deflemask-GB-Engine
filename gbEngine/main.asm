@@ -84,6 +84,12 @@ loadText:
     ld bc,textData4
     ld hl,$9C00 + $80
     call writeText
+    ld bc,textData5
+    ld hl,$9C00 + $C0
+    call writeText
+    ld bc,textData6
+    ld hl,$9C00 + $E0
+    call writeText
     ld a, %10011001
     ld [rLCDC], a
     ret
@@ -114,6 +120,14 @@ textData3:
 
 textData4:
     db "B - Stop Track"
+    db 0
+
+textData5:;title
+    db "                    ";ds not working
+    db 0
+
+textData6:;artist
+    db "                    "
     db 0
 
 checkButtonInput:
