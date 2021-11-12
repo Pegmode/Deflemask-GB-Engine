@@ -28,6 +28,7 @@
 //custom GB engine commands
 
 #define WRITECUSCOMMAND 0xB0 //writedata to 0xFFxy
+#define WRITECUSHRAM 0xB0 //writes data to anywhere in HRAM
 #define WAITCUSCOMMAND 0x80 //wait for x frames
 #define NEXTBANKCUSCOMMAND 0xA0 //go to next bank
 #define LOOPCUSCOMMAND 0xC0 //Loop to loop address and bank
@@ -317,7 +318,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     }
                     else{
                         currentVgmPos += 9;//jump to data block value
-                        currentBankBuffer[currentOutputPos] = WRITECUSCOMMAND;
+                        currentBankBuffer[currentOutputPos] = WRITECUSHRAM;
                         currentOutputPos++;
                         currentBankBuffer[currentOutputPos] = DEFAULT_SYNC_HIGH_ADDRESS;
                         currentOutputPos++;
