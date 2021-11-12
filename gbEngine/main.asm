@@ -1,6 +1,6 @@
 ;Engine Skeleton ROM
 include "hardware.asm"
-include "constants.asm"
+include "dmgbcgmConstants.asm"
 include "vars.asm"
 SECTION "TMA VALUES",ROM0[$1]
 ;use patcher to change these values, set tmaTac to 0 to disable timer
@@ -92,7 +92,7 @@ writeText:
     ret
 
 textData1:
-    db "DeflemaskGBVGM v0.5"
+    db "DeflemaskGBVGM v0.6"
     db 0
 
 textData2:
@@ -102,4 +102,3 @@ textData2:
 include "DMGBVGM.asm"
 include "utils.asm"
 defleFont: incbin "graphics/DefleFont.bin"
-

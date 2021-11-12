@@ -1,4 +1,4 @@
-//by Pegmode 
+//by Pegmode  
 
 #define LIB_MODE 0//flag to disable main/ enable library call
 
@@ -26,11 +26,12 @@
 #define DATABLOCKVGMCOMMAND 0x67
 #define WAITPALCOMMAND 0x63//wait for a PAL engine frame (legal in Deflemask)
 //custom GB engine commands
-#define WRITECUSCOMMAND 0x80//7th bit 
-#define WAITCUSCOMMAND 0x40
-#define NEXTBANKCUSCOMMAND 0x20
-#define LOOPCUSCOMMAND 0x10
-#define ENDSONGCUSCOMMAND 0x08
+
+#define WRITECUSCOMMAND 0xB0 //writedata to 0xFFxy
+#define WAITCUSCOMMAND 0x80 //wait for x frames
+#define NEXTBANKCUSCOMMAND 0xA0 //go to next bank
+#define LOOPCUSCOMMAND 0xC0 //Loop to loop address and bank
+#define ENDSONGCUSCOMMAND 0xD0 //end song
 //ENGINE VARS
 //===========================================================
 #define DATA_START_BANK 0x01
@@ -264,9 +265,9 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND;
                     }
                     else{
-                        currentBankBuffer[currentOutputPos] = WRITECUSCOMMAND;//write new command
+                        //NOTE new format means that NRxx register writes addresses take up the command space
+                        //if first byte bit7 = 0 then this byte contains the write address
                         currentVgmPos++;
-                        currentOutputPos++;
                         currentBankBuffer[currentOutputPos] = vgmToGBTL(vgmBuffer.buffer[currentVgmPos]);//write address
                         currentVgmPos++;
                         currentOutputPos++;
