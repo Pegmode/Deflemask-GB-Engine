@@ -8,7 +8,7 @@ supports `EExx` event commands from Delfemask and uses proper engine timings ins
 *"High on time efficiency, low on space efficiency."*
 
 ## Usage
-1. Download the latest release [here](https://github.com/Pegmode/-DeflemaskGBVGM-/releases)  
+1. Download the latest release [here](https://github.com/Pegmode/-DeflemaskGBVGM-/releases/latest)  
 2. run DeflemaskGBVGMConverter.exe like this  
 `DeflemaskGBVGMConverter.exe <.vgm file> [arguments...]`  
 ### arguments
