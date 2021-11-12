@@ -151,5 +151,5 @@ include "DMGBVGM.asm"
 include "utils.asm"
 defleFont: incbin "graphics/DefleFont.bin"
 
-SECTION "SoundData0",ROMX,BANK[1]
-    incbin "ExampleData/utfa0.bin"
+
+

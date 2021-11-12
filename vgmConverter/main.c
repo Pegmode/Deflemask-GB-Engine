@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include "patchrom.h"
 //CONSTANTS
 //===========================================================
@@ -18,6 +19,7 @@
 #define TMA_RATE1 262144//TMA rate in hz
 #define TMA_RATE2 65536//TMA rate in hz
 #define TMA_RATE3 16384
+#define MAX_TEXT_LEN 20
 //vgm commands
 #define WRITEVGMCOMMAND 0xB3
 #define WAITSTDVGMCOMMAND 0x62 //wait for a single engine frame (1/60s)
@@ -39,6 +41,10 @@
 #define DEFAULT_SYNC_HIGH_ADDRESS 0x80//change this to change where the sync signal writes to 
 #define MAX_DATABANKS 0xFF//must be less than or equal to what the asm engine is designed to handle and never greater than 0xFF
 
+//Pull these from the .sym!!!
+//These can change on reassm!!
+#define TITLE_PATCH_ADDRESS 0x0226  //textData5
+#define AUTHOR_PATCH_ADDRESS 0x023B //textData6
 
 struct VgmBuffer{//contains vgm info and file buffer for Deflemask generated GB Vgm
     uint8_t* buffer;
@@ -52,6 +58,12 @@ struct LoopInfo{//contains address and bank info for looping
     int gbLoopBank;
 };
 typedef struct LoopInfo LoopInfo;
+
+struct SongInfo{
+    char* artist;//20 char long
+    char* title;
+};
+typedef struct SongInfo SongInfo;
 
 //Globals
 //===========================================================
@@ -153,7 +165,7 @@ int samplesToFrames(int engineRate,int samples){//calculate the number of frames
     if (frameCount != (int)frameCount){
         double whole;
         float fractional = modf(frameCount, &whole);
-        if (fractional < 0.99){
+        if (fractional < 0.98){
             printfLibless("ERROR: Frame calculation failure. Engine tick rate of %uhz is likely incorrect. Use -r argumment to change engine rate\n",ENGINE_RATE);
             exit(1);
         }
@@ -173,6 +185,7 @@ int calculateTMAModulo(int tmaRate){//calculate the modulo value to use
     }
     return 0xFF-(int)whole;
 }
+
 
 
 void checkVgmIsDeflemask(VgmBuffer vgmBuffer){
@@ -195,7 +208,53 @@ void writeAllBanks(uint8_t** banks,int numBanks){
     }
 }
 
-void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
+int findStartOfVGMString(VgmBuffer vgmBuffer, int startPos){//scans for the beginning of a string in .vgm
+    bool isScanning = true;
+    int i = 0;
+    while(isScanning){
+        if(vgmBuffer.buffer[vgmBuffer.size-startPos-2*i] == 0){
+            return vgmBuffer.size-startPos-2*i + 2;
+        }
+        else if(vgmBuffer.size-startPos-2*i == 0){//couldn't find begnning of string
+            //error
+        }
+        else{
+            i++;
+        }
+    }
+}
+
+
+int scanVgmString(VgmBuffer vgmBuffer, char* output, int startPos){
+    //find start of string
+    int stringStartAddress = findStartOfVGMString(vgmBuffer, startPos);
+    for(int i = 0; i < MAX_TEXT_LEN; i++){
+        output[i] = vgmBuffer.buffer[stringStartAddress + i*2];
+        if(vgmBuffer.buffer[stringStartAddress + i*2] == '\0'){
+            return stringStartAddress;
+        }
+    }
+    output[MAX_TEXT_LEN-1] = '\0';
+    return stringStartAddress;
+    
+}
+
+void getSongInfo(SongInfo* songInfo, VgmBuffer vgmBuffer){
+    //to get song/artist, walk backwards from Defle Ident
+    char* artist = malloc(MAX_TEXT_LEN);
+    char* title = malloc(MAX_TEXT_LEN);
+    int artistStartAddress = scanVgmString(vgmBuffer, artist, 0x3E);
+    int titleEndoffset = vgmBuffer.size - (artistStartAddress - 0x32); //offset from EOF, really hacky
+    int songStartAddress = scanVgmString(vgmBuffer, title, titleEndoffset);
+    #if !LIB_MODE
+    printf("Artist: %s\n", artist);
+    printf("Title: %s\n", title);
+    #endif    
+    songInfo->title = title;
+    songInfo->artist = artist;
+}
+
+void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo, SongInfo songInfo){
     //load patch ROM into buffer
     uint8_t* patchBuffer = malloc(gb_patch_rom_length + (numBanks + 1) * 0x4000);
     memcpy(patchBuffer, gb_patch_rom, gb_patch_rom_length);
@@ -219,6 +278,8 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
     }
 
     patchBuffer[0x01] = tmaDistance + TMA_OFFSET;
+    strcpy(&patchBuffer[TITLE_PATCH_ADDRESS], songInfo.title);
+    strcpy(&patchBuffer[AUTHOR_PATCH_ADDRESS], songInfo.artist);
 
     char outROMPath[0xFF];
     sprintf(outROMPath,"%s.gb",OUTPATH);
@@ -229,7 +290,7 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
         sprintf(outROMPath,"%s",OUTPATH);
     }
     FILE* f = fopen(outROMPath,"wb");
-    printfLibless("GB ROM final output Size: %ubytes\n",0x4000 * (gb_patch_rom_length + 1));
+    
     int outputSize = gb_patch_rom_length + 0x4000 * (numBanks + 1);
     fwrite(patchBuffer,1,outputSize,f);
     fclose(f);
@@ -378,10 +439,17 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
         writeAllBanks(output,currentBank);       
     }
     else{
-        patchROM(output,currentBank, loopInfo);
+        SongInfo songInfo;
+        //debug
+        getSongInfo(&songInfo, vgmBuffer);
+        patchROM(output, currentBank, loopInfo, songInfo);
+        free(songInfo.artist);
+        free(songInfo.title);
     }
 
-    printfLibless("Conversion Complete!\n%u banks used\n",currentBank+1);
+    #if !LIB_MODE
+    printf("Conversion Complete!\n%u banks used\n",currentBank+1);//hacky bug solution
+    #endif
 }
 
 void parseArgs(int argc, char** argv){
@@ -394,7 +462,9 @@ void parseArgs(int argc, char** argv){
         if(strcmp("-r",argv[i]) == 0){//rate
             i++;
             ENGINE_RATE = atoi(argv[i]);
-            printfLibless("Engine rate set to %u\n",ENGINE_RATE);
+            #if !LIB_MODE
+            printf("Engine rate set to %i\n",ENGINE_RATE);//hacky bug solution
+            #endif
         }
         else if(strcmp("-o",argv[i]) == 0){//output path
             i++;
