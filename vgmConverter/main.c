@@ -43,8 +43,8 @@
 
 //Pull these from the .sym!!!
 //These can change on reassm!!
-#define TITLE_PATCH_ADDRESS 0x0226  //textData5
-#define AUTHOR_PATCH_ADDRESS 0x023B //textData6
+#define TITLE_PATCH_ADDRESS 0x22F //textData5
+#define AUTHOR_PATCH_ADDRESS 0x0244 //textData6
 
 struct VgmBuffer{//contains vgm info and file buffer for Deflemask generated GB Vgm
     uint8_t* buffer;
@@ -74,7 +74,7 @@ char* PATCHROM_PATH = "patchROM.gb";
 int TMA_OFFSET = 0;//value to add to TMA for fine control
 int LOOPVGMADDR = 0;//loop address in .vgm file 0 = no loop
 
-char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
+char* HELPSTRING = "\nversion 0.6 Pre-release\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
 \nargs:\n\
 -r <rate> set engine rate\n\
 -o <outpath> set the output path\n\
@@ -82,7 +82,7 @@ char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
 -ti <offset> increase tma offset timing (speed up song if using custom engine speed)\n\
 -td <offset> decrease tma offset timing (slow down song if using custom engine speed)\n";
 
-
+ 
 //CODE
 //===========================================================
 

@@ -90,6 +90,9 @@ loadText:
     ld bc,textData6
     ld hl,$9C00 + $E0
     call writeText
+    ld bc,betaText
+    ld hl,$9D61
+    call writeText
     ld a, %10011001
     ld [rLCDC], a
     ret
@@ -128,6 +131,10 @@ textData5:;title
 
 textData6:;artist
     db "                    "
+    db 0
+
+betaText:
+    db "PRE-RELEASE"
     db 0
 
 checkButtonInput:
