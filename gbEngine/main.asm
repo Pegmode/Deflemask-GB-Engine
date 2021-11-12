@@ -1,6 +1,7 @@
 ;Engine Skeleton ROM
 include "hardware.asm"
-include "dmgbcgmConstants.asm"
+include "soundEngineConstants.asm"
+include "soundEngineVars.asm"
 include "vars.asm"
 SECTION "TMA VALUES",ROM0[$1]
 ;use patcher to change these values, set tmaTac to 0 to disable timer
@@ -54,10 +55,12 @@ main:;main loop
 
 vBlankRoutine:
     call DMEngineUpdate
+    call checkButtonInput
     reti
 
 timerRoutine:
     call DMEngineUpdate
+    call checkButtonInput
     reti
 
 loadText:
@@ -74,6 +77,12 @@ loadText:
     call writeText
     ld bc,textData2
     ld hl,$9C00 + $20
+    call writeText
+    ld bc,textData3
+    ld hl,$9C00 + $60
+    call writeText
+    ld bc,textData4
+    ld hl,$9C00 + $80
     call writeText
     ld a, %10011001
     ld [rLCDC], a
@@ -99,6 +108,34 @@ textData2:
     db "Hardware Player"
     db 0
 
+textData3:
+    db "A - Restart Track"
+    db 0
+
+textData4:
+    db "B - Stop Track"
+    db 0
+
+checkButtonInput:
+    call ReadJoy
+    ld a, [NewJoyData]
+.checkRestart
+    cp 1;A button
+    jr nz, .checkEnd
+    call DMEngineInit
+    ld a, 1
+    ld [SoundStatus],a
+    jr nz, .exit
+.checkEnd
+    cp 2;b
+    jr nz, .exit
+    call stopMusic  
+.exit
+    ret
+
 include "DMGBVGM.asm"
 include "utils.asm"
 defleFont: incbin "graphics/DefleFont.bin"
+
+SECTION "SoundData0",ROMX,BANK[1]
+    incbin "ExampleData/utfa0.bin"

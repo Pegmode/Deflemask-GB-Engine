@@ -108,9 +108,7 @@ DMEngineUpdate:
     cp DMVGM_CMD_6
     jr nz,.errorInCheck
     ;No need to set up registers for quiet status. should be done in tracker via envelopes, OFF or ECxx
-    xor a
-    ld [SoundStatus],a
-    call resetSound
+    call stopMusic
     jr .endFrame
 .errorInCheck
     ;handle stuff
@@ -120,6 +118,12 @@ DMEngineUpdate:
     ld [VgmLookupPointerHigh],a
     ld a, l
     ld [VgmLookupPointerLow],a
+    ret
+
+stopMusic:
+    xor a
+    ld [SoundStatus],a
+    call resetSound
     ret
 
 resetSound:

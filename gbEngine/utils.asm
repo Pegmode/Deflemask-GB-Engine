@@ -60,3 +60,40 @@ WaitVBlank:
 	ret
 
 
+	;Read Joypad input (from GB cpu man)
+;==========================================================
+;[OldJoyData] return values:
+;$8= start , $80=DOWN
+;$4= select,$40=Up
+;$2=b , $20=left
+;$1=A, $10= right
+ReadJoy:
+	ld a,%00100000
+	ld [rP1],a;Select P14
+	ld a,[rP1]
+	ld a,[rP1];wait
+	cpl ;inv
+	and %00001111;get only first 4 bits
+	swap a;swap it
+	ld b,a; store a in b
+	ld a,%00010000
+	ld [rP1],a;Select P15
+	ld a,[rP1]
+	ld a,[rP1]
+	ld a,[rP1]
+	ld a,[rP1]
+	ld a,[rP1]
+	ld a,[rP1];wait
+	cpl ;inv
+	and %00001111;get first 4 bits
+	or b;put a and b together
+	ld b,a;store a in d
+	ld a,[OldJoyData];read old joy data from RAM
+	xor b; toggle w/current button bit backup
+	and b; get current button bit backup
+	ld [NewJoyData],a;save in new NewJoyData storage
+	ld a,b;put original value in a
+	ld [OldJoyData],a;store it as old jow Data
+	ld a,$30;deslect p14 and P15
+	ld [rP1],A;Reset Joypad
+	ret
