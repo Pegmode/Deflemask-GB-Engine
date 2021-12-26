@@ -1,18 +1,10 @@
-;Engine Skeleton ROM
+;Deflemask Player ROM
 include "hardware.asm"
 include "soundEngineConstants.asm"
 include "soundEngineVars.asm"
 include "vars.asm"
-SECTION "TMA VALUES",ROM0[$1]
-;use patcher to change these values, set tmaTac to 0 to disable timer
-tmaMod: db $C3 
-;tmaTac: db %100;4096 hz
-tmaTac: db 0
-;change these to add looping to song
-loopAddress: dw $0; Address High, Low
-loopBank: db 0, 0 ;Bank Val: High, Low
 
-
+SECTION "ROM ID", ROM0[$1]
 db "DMGBVGM 0.6 by Pegmode"
 
 SECTION "vBlank IRQ",ROM0[$40]
@@ -25,8 +17,13 @@ timerIRQ:
 SECTION "MBCDefinition",ROM0[$147]
     dw CART_MBC5
 
+    
 SECTION "EntryPoint",ROM0[$100]
 jp codeInit
+
+
+SECTION "Song Parameters", ROM0[$3FFA];song patch variables
+include "soundEngineSongParams.asm"
 
 SECTION "code",ROM0[$150]
 codeInit:
@@ -156,6 +153,11 @@ checkButtonInput:
 .exit
     ret
 
-include "DMGBVGM.asm"
+
 include "utils.asm"
 defleFont: incbin "graphics/DefleFont.bin"
+
+SECTION "EngineCode", ROM0[$3F00]
+;include as far ahead as possible for .gbs patching
+;If engine is updated this may need to be increased!
+include "DMGBVGM.asm"
