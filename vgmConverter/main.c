@@ -41,6 +41,10 @@
 #define DEFAULT_SYNC_HIGH_ADDRESS 0x80//change this to change where the sync signal writes to 
 #define MAX_DATABANKS 0xFF//must be less than or equal to what the asm engine is designed to handle and never greater than 0xFF
 
+#define ROM_LOOP_POINTER_ADDRESS 0x3// loopAddress label in ROM, gives address to loop to
+#define ROM_LOOP_BANK_ADDRESS 0x5// loopBank label in ROM, gives bank to loop to
+#define ROM_SONG_TMA_CONST 0x02//tmaMod label in ROM, gives song TMA, disables if 0
+
 //Pull these from the .sym!!!
 //These can change on reassm!!
 #define TITLE_PATCH_ADDRESS 0x22F //textData5
@@ -269,15 +273,15 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo, SongInfo songInfo
     int tmaDistance = 0;
     if (ENGINE_RATE != 60){
         tmaDistance = calculateTMAModulo(TMA_RATE0);
-        patchBuffer[0x02] = 4;
+        patchBuffer[ROM_SONG_TMA_CONST] = 4;
     }
     else{
-        patchBuffer[0x02] = 0;
+        patchBuffer[ROM_SONG_TMA_CONST] = 0;
     }
     //write loop data
     if (LOOPVGMADDR != 0){
-        memcpy(&patchBuffer[0x03],&loopInfo.gbLoopAddress,2);
-        memcpy(&patchBuffer[0x05],&loopInfo.gbLoopBank,2);
+        memcpy(&patchBuffer[ROM_LOOP_POINTER_ADDRESS],&loopInfo.gbLoopAddress,2);
+        memcpy(&patchBuffer[ROM_LOOP_BANK_ADDRESS],&loopInfo.gbLoopBank,2);
     }
 
     patchBuffer[0x01] = tmaDistance + TMA_OFFSET;
