@@ -47,7 +47,8 @@
 //There is a helper script ../tools/generateRomPointers.py to automatically scan for these from the asm .sym file
 #define ROM_LOOP_POINTER_ADDRESS 0x3FFC// loopAddress label in ROM, gives address to loop to
 #define ROM_LOOP_BANK_ADDRESS 0x3FFE// loopBank label in ROM, gives bank to loop to
-#define ROM_SONG_TMA_CONST 0x3FFA//tmaMod label in ROM, gives song TMA, disables if 0
+#define ROM_SONG_TMA_MOD_CONST 0x3FFA//tmaMod label in ROM, gives song TMA, disables if 0
+#define ROM_SONG_TMA_TAC_CONST 0x3FFB
 #define TITLE_PATCH_ADDRESS 0x22F //textData5
 #define AUTHOR_PATCH_ADDRESS 0x0244 //textData6
 
@@ -274,10 +275,10 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo, SongInfo songInfo
     int tmaDistance = 0;
     if (ENGINE_RATE != 60){
         tmaDistance = calculateTMAModulo(TMA_RATE0);
-        patchBuffer[ROM_SONG_TMA_CONST] = 4;
+        patchBuffer[ROM_SONG_TMA_TAC_CONST] = 4;
     }
     else{
-        patchBuffer[ROM_SONG_TMA_CONST] = 0;
+        patchBuffer[ROM_SONG_TMA_TAC_CONST] = 0;
     }
     //write loop data
     if (LOOPVGMADDR != 0){
@@ -285,7 +286,7 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo, SongInfo songInfo
         memcpy(&patchBuffer[ROM_LOOP_BANK_ADDRESS],&loopInfo.gbLoopBank,2);
     }
 
-    patchBuffer[0x01] = tmaDistance + TMA_OFFSET;
+    patchBuffer[ROM_SONG_TMA_MOD_CONST] = tmaDistance + TMA_OFFSET;
     strcpy(&patchBuffer[TITLE_PATCH_ADDRESS], songInfo.title);
     strcpy(&patchBuffer[AUTHOR_PATCH_ADDRESS], songInfo.artist);
 
