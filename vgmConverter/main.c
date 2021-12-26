@@ -41,10 +41,12 @@
 #define DEFAULT_SYNC_HIGH_ADDRESS 0x80//change this to change where the sync signal writes to 
 #define MAX_DATABANKS 0xFF//must be less than or equal to what the asm engine is designed to handle and never greater than 0xFF
 
-#define ROM_LOOP_POINTER_ADDRESS 0x3// loopAddress label in ROM, gives address to loop to
-#define ROM_LOOP_BANK_ADDRESS 0x5// loopBank label in ROM, gives bank to loop to
-#define ROM_SONG_TMA_CONST 0x02//tmaMod label in ROM, gives song TMA, disables if 0
-
+//Deflemask Player ROM Pointers
+//===========================================================
+//Pointers for included player ROM
+#define ROM_LOOP_POINTER_ADDRESS 0x3FFC// loopAddress label in ROM, gives address to loop to
+#define ROM_LOOP_BANK_ADDRESS 0x3FFE// loopBank label in ROM, gives bank to loop to
+#define ROM_SONG_TMA_CONST 0x3FFA//tmaMod label in ROM, gives song TMA, disables if 0
 //Pull these from the .sym!!!
 //These can change on reassm!!
 #define TITLE_PATCH_ADDRESS 0x22F //textData5
