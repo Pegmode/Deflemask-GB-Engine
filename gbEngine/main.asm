@@ -53,6 +53,8 @@ main:;main loop
     halt
     jp main
 
+
+
 vBlankRoutine:
     call DMEngineUpdate
     call checkButtonInput
