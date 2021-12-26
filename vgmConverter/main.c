@@ -44,11 +44,10 @@
 //Deflemask Player ROM Pointers
 //===========================================================
 //Pointers for included player ROM
+//There is a helper script ../tools/generateRomPointers.py to automatically scan for these from the asm .sym file
 #define ROM_LOOP_POINTER_ADDRESS 0x3FFC// loopAddress label in ROM, gives address to loop to
 #define ROM_LOOP_BANK_ADDRESS 0x3FFE// loopBank label in ROM, gives bank to loop to
 #define ROM_SONG_TMA_CONST 0x3FFA//tmaMod label in ROM, gives song TMA, disables if 0
-//Pull these from the .sym!!!
-//These can change on reassm!!
 #define TITLE_PATCH_ADDRESS 0x22F //textData5
 #define AUTHOR_PATCH_ADDRESS 0x0244 //textData6
 
