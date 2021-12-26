@@ -27,12 +27,13 @@ DMEngineUpdate:
     ld [SoundWaitFrames],a
     ret
 .loadCurrentBank
-    ld a ,[CurrentSoundBankHigh]
-    ld b,a
     ld a ,[CurrentSoundBankLow]
-    ld [rROMB0],a
+    ld b,a
+    ld a ,[CurrentSoundBankHigh]
+    ld [rROMB1],a;note: changed order for GBS support
     ld a,b
-    ld [rROMB1],a
+    ld [rROMB0],a
+
     
 .commandCheckInit
     ld hl,VgmLookupPointer;load data pointer
