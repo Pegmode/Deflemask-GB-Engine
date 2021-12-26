@@ -9,8 +9,8 @@ tmaMod: db $C3
 ;tmaTac: db %100;4096 hz
 tmaTac: db 0
 ;change these to add looping to song
-loopAddress: db 0,0
-loopBank: db 0, 0
+loopAddress: dw $0; Address High, Low
+loopBank: db 0, 0 ;Bank Val: High, Low
 
 
 db "DMGBVGM 0.6 by Pegmode"
@@ -134,7 +134,7 @@ textData6:;artist
     db 0
 
 betaText:
-    db "PRE-RELEASE"
+    db "0.6 PRE-RELEASE"
     db 0
 
 checkButtonInput:
@@ -157,7 +157,3 @@ checkButtonInput:
 include "DMGBVGM.asm"
 include "utils.asm"
 defleFont: incbin "graphics/DefleFont.bin"
-
-SECTION "SoundData0",ROMX,BANK[1]
-
-
