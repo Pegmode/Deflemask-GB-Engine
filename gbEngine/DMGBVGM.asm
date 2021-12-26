@@ -1,4 +1,6 @@
 ;ENGINE CODE
+engineID:
+    dw "DMGBVGM 0.6 PEGMODE"
 DMEngineInit:
     ld a,DMVGM_START_BANK
     ld [CurrentSoundBankLow],a

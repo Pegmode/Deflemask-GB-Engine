@@ -13,7 +13,7 @@ loopAddress: db 0,0
 loopBank: db 0, 0
 
 
-db "DMGBVGM by Pegmode"
+db "DMGBVGM 0.6 by Pegmode"
 
 SECTION "vBlank IRQ",ROM0[$40]
 vBlankIRQ:
@@ -157,5 +157,7 @@ checkButtonInput:
 include "DMGBVGM.asm"
 include "utils.asm"
 defleFont: incbin "graphics/DefleFont.bin"
+
+SECTION "SoundData0",ROMX,BANK[1]
 
 
