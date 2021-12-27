@@ -125,7 +125,7 @@ textData4:
     db 0
 
 textData5:;title
-    db "                    ";ds not working
+    db "                    "
     db 0
 
 textData6:;artist
@@ -168,9 +168,9 @@ gbsInit:;init only for gbs
     
 include "../gbEngine/DMGBVGM.asm"
 
-SECTION "sound1", ROMX, BANK[1]
-    incbin "exampleData/gyrus/gyrus0.bin"
-    SECTION "sound2", ROMX, BANK[2]
-    incbin "exampleData/gyrus/gyrus1.bin"
-    SECTION "sound3", ROMX, BANK[3]
-    incbin "exampleData/gyrus/gyrus2.bin"
+; SECTION "sound1", ROMX, BANK[1]
+;     incbin "exampleData/gyrus/gyrus0.bin"
+;     SECTION "sound2", ROMX, BANK[2]
+;     incbin "exampleData/gyrus/gyrus1.bin"
+;     SECTION "sound3", ROMX, BANK[3]
+;     incbin "exampleData/gyrus/gyrus2.bin"
