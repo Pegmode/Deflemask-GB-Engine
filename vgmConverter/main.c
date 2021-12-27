@@ -585,6 +585,21 @@ int gbvgm(char *vgm_source_path, int hz, char* romPath){  // For .gb creation in
     free(vgmBuffer.buffer);
     return 0;
 }
+
+int gbsRender(char *vgm_source_path, int hz, char* romPath){//I think this should work. Feel free to change if it does not
+    EXPORTMODE = 2;
+    TMA_OFFSET = 0;
+    ENGINE_RATE = hz;
+    strcpy(OUTPATH,romPath);
+    VgmBuffer vgmBuffer;
+    openFile(vgm_source_path,&vgmBuffer);
+    checkHeader(vgmBuffer);
+    checkVgmIsDeflemask(vgmBuffer);
+    convertToNewFormat(vgmBuffer);
+    free(vgmBuffer.buffer);
+    return 0;
+
+}
 #else
 int main(int argc, char* argv[]){
     parseArgs(argc,argv);
