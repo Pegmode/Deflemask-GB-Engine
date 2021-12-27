@@ -7,6 +7,7 @@ supports `EExx` event commands from Delfemask and uses proper engine timings ins
 
 *"High on time efficiency, low on space efficiency."*
 
+
 ## Usage
 1. Download the latest release [here](https://github.com/Pegmode/-DeflemaskGBVGM-/releases/latest)  
 2. run DeflemaskGBVGMConverter.exe like this  
@@ -19,24 +20,17 @@ supports `EExx` event commands from Delfemask and uses proper engine timings ins
 * `-ti <offset>` increase tma offset timing (speed up song if using custom engine speed).
 * `-td <offset>` decrease tma offset timing (slow down song if using custom engine speed).
 
-#### .bin export
-include all exported .bin files in your asm ROM. Each .bin takes up an entire ROM bank. Make sure each sound bank is beside another (eg: ahoy1 should be one bank after ahoy0).
+### custom ROM
+if you want to add this player to your game boy assembly program check out [this page](https://github.com/Pegmode/-DeflemaskGBVGM-/wiki/Including-this-in-your-game-boy-ASM-project) on the wiki.
 
-example:
-```asm
-SECTION "SoundData0",ROMX,BANK[1]
-incbin "ExampleData/ahoy/ahoy0.bin
-....
-....
-SECTION "SoundData9",ROMX,BANK[10]
-incbin "ExampleData/ahoy/ahoy9.bin"
-```
 
 ## Projects that use this engine
 - [Marine AhoyGB](https://github.com/Pegmode/MarineAhoyGB)
 
-
+## More info
+For more info, check out [the wiki](https://github.com/Pegmode/-DeflemaskGBVGM-/wiki)
 
 #### Sync command
 Sync signals write to HRAM with the address specified in `DEFAULT_SYNC_HIGH_ADDRESS` in the converter (default `0x80`). In deflemask use the `EExx` command to write the value xx to `DEFAULT_SYNC_HIGH_ADDRESS`.
+
 
