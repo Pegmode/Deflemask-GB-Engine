@@ -4,6 +4,7 @@
 *.map
 *.obj
 *.gb
+*.dll
 .vscode/
 /gbEngine/zlib1.dll
 /vgmConverter/*.bin
