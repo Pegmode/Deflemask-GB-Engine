@@ -157,7 +157,13 @@ checkButtonInput:
 include "utils.asm"
 defleFont: incbin "graphics/DefleFont.bin"
 
-SECTION "EngineCode", ROM0[$3F00]
+SECTION "EngineCode", ROM0[$3EF0]
 ;include as far ahead as possible for .gbs patching
 ;If engine is updated this may need to be increased!
+gbsInit:;init only for gbs 
+    call DMEngineInit
+    ld a, 1
+    ld [SoundStatus],a
+    ret
+    
 include "DMGBVGM.asm"

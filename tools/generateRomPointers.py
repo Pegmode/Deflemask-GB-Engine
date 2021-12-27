@@ -43,6 +43,6 @@ for key in pointerAddresses:
 
 print(outString)
 
-f = open("tools\\" + OUT_FILENAME, "w")
-f.write(outString)
-f.close()
+# f = open("tools\\" + OUT_FILENAME, "w")
+# f.write(outString)
+# f.close()
