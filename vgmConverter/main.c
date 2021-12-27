@@ -1,4 +1,4 @@
-//by Pegmode 
+//by Pegmode  
 
 #define LIB_MODE 0//flag to disable main/ enable library call
 
@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include "patchrom.h"
 //CONSTANTS
 //===========================================================
@@ -18,6 +19,7 @@
 #define TMA_RATE1 262144//TMA rate in hz
 #define TMA_RATE2 65536//TMA rate in hz
 #define TMA_RATE3 16384
+#define MAX_TEXT_LEN 20
 //vgm commands
 #define WRITEVGMCOMMAND 0xB3
 #define WAITSTDVGMCOMMAND 0x62 //wait for a single engine frame (1/60s)
@@ -26,16 +28,37 @@
 #define DATABLOCKVGMCOMMAND 0x67
 #define WAITPALCOMMAND 0x63//wait for a PAL engine frame (legal in Deflemask)
 //custom GB engine commands
-#define WRITECUSCOMMAND 0x80//7th bit 
-#define WAITCUSCOMMAND 0x40
-#define NEXTBANKCUSCOMMAND 0x20
-#define LOOPCUSCOMMAND 0x10
-#define ENDSONGCUSCOMMAND 0x08
+
+#define WRITECUSCOMMAND 0xB0 //writedata to 0xFFxy
+#define WRITECUSHRAM 0xB0 //writes data to anywhere in HRAM
+#define WAITCUSCOMMAND 0x80 //wait for x frames
+#define NEXTBANKCUSCOMMAND 0xA0 //go to next bank
+#define LOOPCUSCOMMAND 0xC0 //Loop to loop address and bank
+#define ENDSONGCUSCOMMAND 0xD0 //end song
 //ENGINE VARS
 //===========================================================
 #define DATA_START_BANK 0x01
 #define DEFAULT_SYNC_HIGH_ADDRESS 0x80//change this to change where the sync signal writes to 
 #define MAX_DATABANKS 0xFF//must be less than or equal to what the asm engine is designed to handle and never greater than 0xFF
+
+//Deflemask Player ROM Pointers
+//===========================================================
+//Pointers for included player ROM
+//There is a helper script ../tools/generateRomPointers.py to automatically scan for these from the asm .sym file
+#define ROM_LOOP_POINTER_ADDRESS 0x3FFC// loopAddress label in ROM, gives address to loop to
+#define ROM_LOOP_BANK_ADDRESS 0x3FFE// loopBank label in ROM, gives bank to loop to
+#define ROM_SONG_TMA_MOD_CONST 0x3FFA//tmaMod label in ROM, gives song TMA, disables if 0
+#define ROM_SONG_TMA_TAC_CONST 0x3FFB
+#define TITLE_PATCH_ADDRESS 0x22F //textData5
+#define AUTHOR_PATCH_ADDRESS 0x0244 //textData6
+
+//GBS consts
+//===========================================================
+//WARNING THESE CAN CHANGE IF ROM IS UPDATED
+#define GBS_DATA_START 0x3EF0//address contained in "EngineCode" section in ROM
+#define GBS_INIT GBS_DATA_START//our gbs code is at the beginning of load
+#define GBS_PLAY 0x3f26// DMEngineUpdate label
+#define GBS_SP 0xFFFE
 
 
 struct VgmBuffer{//contains vgm info and file buffer for Deflemask generated GB Vgm
@@ -51,29 +74,40 @@ struct LoopInfo{//contains address and bank info for looping
 };
 typedef struct LoopInfo LoopInfo;
 
+struct SongInfo{
+    char* artist;//20 char long
+    char* title;
+};
+typedef struct SongInfo SongInfo;
+
 //Globals
 //===========================================================
-int EXPORTMODE = 0;//0 = patch .gb
+int EXPORTMODE = 0;//0 = patch .gb, 1 = bin, 2 = gbs
 int ENGINE_RATE = 60;//default rate to 60hz
 char OUTPATH[0xFF] = "output";
 char* PATCHROM_PATH = "patchROM.gb";
 int TMA_OFFSET = 0;//value to add to TMA for fine control
 int LOOPVGMADDR = 0;//loop address in .vgm file 0 = no loop
 
-char* HELPSTRING = "\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
+char* HELPSTRING = "\nversion 0.6\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
 \nargs:\n\
 -r <rate> set engine rate\n\
 -o <outpath> set the output path\n\
 -bin export as .bin file instead of patching .gb\n\
+-g export as .gbs\n\
 -ti <offset> increase tma offset timing (speed up song if using custom engine speed)\n\
 -td <offset> decrease tma offset timing (slow down song if using custom engine speed)\n";
-
-
+ 
 //CODE
 //===========================================================
 
 uint8_t vgmToGBTL(uint8_t value){//translate vgm write command destination address to actual FFxy value
     return value + 0x10;
+}
+
+void write16Bit(uint8_t* dest,int val){//little endian for .gbs
+    dest[0] = (uint8_t)val&0xFF;
+    dest[1] = (uint8_t)(val>>8)&0xFF;
 }
 
 void printfLibless(char* format,...){//printf only when LIB_MODE = 0 for Deflemask support requested by Delek
@@ -105,7 +139,10 @@ void openFile(char* path,VgmBuffer* vgmBuffer){
     int fileSize = ftell(f);
     vgmBuffer->buffer = malloc(fileSize);
     fseek(f,0,SEEK_SET);
-    fread(vgmBuffer->buffer,1,fileSize,f);
+    if(fread(vgmBuffer->buffer,1,fileSize,f) < 1){
+        //womp womp
+        printfLibless("Error: VGM file had issue opening\n");
+    }
     fclose(f);
     vgmBuffer->size = fileSize;
 }
@@ -151,7 +188,7 @@ int samplesToFrames(int engineRate,int samples){//calculate the number of frames
     if (frameCount != (int)frameCount){
         double whole;
         float fractional = modf(frameCount, &whole);
-        if (fractional < 0.99){
+        if (fractional < 0.98){
             printfLibless("ERROR: Frame calculation failure. Engine tick rate of %uhz is likely incorrect. Use -r argumment to change engine rate\n",ENGINE_RATE);
             exit(1);
         }
@@ -172,7 +209,6 @@ int calculateTMAModulo(int tmaRate){//calculate the modulo value to use
     return 0xFF-(int)whole;
 }
 
-
 void checkVgmIsDeflemask(VgmBuffer vgmBuffer){
     uint8_t deflemaskFooter[] = {0x44, 0x00, 0x65, 0x00, 0x66, 0x00, 0x6C, 0x00, 0x65, 0x00, 0x4D, 0x00, 0x61, 0x00, 0x73, 0x00, 0x6B, 0x00, 0x20, 0x00, 0x54, 0x00, 0x72, 0x00, 0x61, 0x00, 0x63, 0x00, 0x6B, 0x00, 0x65, 0x00, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00,};
     uint8_t footerBuffer[0x26];
@@ -183,7 +219,7 @@ void checkVgmIsDeflemask(VgmBuffer vgmBuffer){
     }
 }
 
-void writeAllBanks(uint8_t** banks,int numBanks){
+void writeAllBanks(uint8_t** banks,int numBanks){//bin export mode
     char outputName[0xFF];
     for(int i = 0; i <= numBanks; i++){
         sprintf(outputName,"%s%u.bin",OUTPATH,i);
@@ -193,9 +229,100 @@ void writeAllBanks(uint8_t** banks,int numBanks){
     }
 }
 
-void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
+int findStartOfVGMString(VgmBuffer vgmBuffer, int startPos){//scans for the beginning of a string in .vgm
+    bool isScanning = true;
+    int i = 0;
+    while(isScanning){
+        if(vgmBuffer.buffer[vgmBuffer.size-startPos-2*i] == 0){
+            return vgmBuffer.size-startPos-2*i + 2;
+        }
+        else if(vgmBuffer.size-startPos-2*i == 0){//couldn't find begnning of string
+            //error
+        }
+        else{
+            i++;
+        }
+    }
+}
+
+int scanVgmString(VgmBuffer vgmBuffer, char* output, int startPos){
+    //find start of string
+    int stringStartAddress = findStartOfVGMString(vgmBuffer, startPos);
+    for(int i = 0; i < MAX_TEXT_LEN; i++){
+        output[i] = vgmBuffer.buffer[stringStartAddress + i*2];
+        if(vgmBuffer.buffer[stringStartAddress + i*2] == '\0'){
+            return stringStartAddress;
+        }
+    }
+    output[MAX_TEXT_LEN-1] = '\0';
+    return stringStartAddress;
+    
+}
+
+void getSongInfo(SongInfo* songInfo, VgmBuffer vgmBuffer){
+    //to get song/artist, walk backwards from Defle Ident
+    char* artist = malloc(MAX_TEXT_LEN);
+    char* title = malloc(MAX_TEXT_LEN);
+    int artistStartAddress = scanVgmString(vgmBuffer, artist, 0x3E);
+    int titleEndoffset = vgmBuffer.size - (artistStartAddress - 0x32); //offset from EOF, really hacky
+    int songStartAddress = scanVgmString(vgmBuffer, title, titleEndoffset);
+    #if !LIB_MODE
+    printf("Artist: %s\n", artist);
+    printf("Title: %s\n", title);
+    #endif    
+    songInfo->title = title;
+    songInfo->artist = artist;
+}
+
+void exportGBS(SongInfo songInfo, uint8_t* patchBuffer, int patchBufferSize){//patch patched rom to .gbs and export
+    //build gbs
+    uint8_t* gbsFile;
+    int gbsSize = 0x70 + patchBufferSize - GBS_DATA_START;
+    gbsFile = (uint8_t*) malloc(gbsSize);
+    memcpy(&gbsFile[0],"GBS",3);//Identifier
+    gbsFile[3] = 1;
+    gbsFile[4] = 1;//NUMBER OF SONGS
+    gbsFile[5] = 1;//First song
+    //load Address
+    write16Bit(&gbsFile[0x6], GBS_DATA_START);
+    //init address
+    write16Bit(&gbsFile[0x8], GBS_INIT);
+    //play address
+    write16Bit(&gbsFile[0xA], GBS_PLAY);
+    //SP init
+    write16Bit(&gbsFile[0xC], GBS_SP);
+    //timer modulo(rTMA)
+    gbsFile[0xE] = 0;//init 0
+    //timer control(rTAC)
+    gbsFile[0xF] = 0;//init0
+
+    if (patchBuffer[ROM_SONG_TMA_TAC_CONST] != 0 ){
+        //overwrite TMA,TAC if using custom timing
+        memcpy(&gbsFile[0xE], &patchBuffer[ROM_SONG_TMA_MOD_CONST], 1);
+        memcpy(&gbsFile[0xF], &patchBuffer[ROM_SONG_TMA_TAC_CONST], 1);
+    }
+
+    //add title/author
+    strcpy(&gbsFile[0x10], songInfo.title);
+    strcpy(&gbsFile[0x30], songInfo.artist);
+
+    //printf("PATCH BUFFER %x\n", patchBuffer[GBS_DATA_START]);
+    memcpy(&gbsFile[0x70], &patchBuffer[GBS_DATA_START], patchBufferSize - GBS_DATA_START);
+
+    //write to .gbs file
+    char outROMPath[0xFF];
+    sprintf(outROMPath,"%s.gbs",OUTPATH);
+    FILE* f = fopen(outROMPath, "wb");
+    fwrite(gbsFile, 1, gbsSize, f);
+    fclose(f);
+    free(gbsFile);
+    return;
+}
+
+void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo, SongInfo songInfo){
     //load patch ROM into buffer
-    uint8_t* patchBuffer = malloc(gb_patch_rom_length + (numBanks + 1) * 0x4000);
+    int patchBufferSize = gb_patch_rom_length + (numBanks + 1) * 0x4000;
+    uint8_t* patchBuffer = malloc(patchBufferSize);
     memcpy(patchBuffer, gb_patch_rom, gb_patch_rom_length);
     //copy bank buffer 
     for (int i = 0; i < numBanks+1; i++){
@@ -205,32 +332,40 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo){
     int tmaDistance = 0;
     if (ENGINE_RATE != 60){
         tmaDistance = calculateTMAModulo(TMA_RATE0);
-        patchBuffer[0x02] = 4;
+        patchBuffer[ROM_SONG_TMA_TAC_CONST] = 4;
     }
     else{
-        patchBuffer[0x02] = 0;
+        patchBuffer[ROM_SONG_TMA_TAC_CONST] = 0;
     }
     //write loop data
     if (LOOPVGMADDR != 0){
-        memcpy(&patchBuffer[0x03],&loopInfo.gbLoopAddress,2);
-        memcpy(&patchBuffer[0x05],&loopInfo.gbLoopBank,2);
+        memcpy(&patchBuffer[ROM_LOOP_POINTER_ADDRESS],&loopInfo.gbLoopAddress,2);
+        memcpy(&patchBuffer[ROM_LOOP_BANK_ADDRESS],&loopInfo.gbLoopBank,2);
     }
 
-    patchBuffer[0x01] = tmaDistance + TMA_OFFSET;
+    patchBuffer[ROM_SONG_TMA_MOD_CONST] = tmaDistance + TMA_OFFSET;
 
-    char outROMPath[0xFF];
-    sprintf(outROMPath,"%s.gb",OUTPATH);
-    if(OUTPATH[strlen(OUTPATH)-3]!='.'){
+    if(EXPORTMODE == 0){//.gb export mode
+        strcpy(&patchBuffer[TITLE_PATCH_ADDRESS], songInfo.title);
+        strcpy(&patchBuffer[AUTHOR_PATCH_ADDRESS], songInfo.artist);
+
+        char outROMPath[0xFF];
         sprintf(outROMPath,"%s.gb",OUTPATH);
+        if(OUTPATH[strlen(OUTPATH)-3]!='.'){
+            sprintf(outROMPath,"%s.gb",OUTPATH);
+        }
+        else{//deflemask call compatibility  
+            sprintf(outROMPath,"%s",OUTPATH);
+        }
+        FILE* f = fopen(outROMPath,"wb");
+        
+        int outputSize = gb_patch_rom_length + 0x4000 * (numBanks + 1);
+        fwrite(patchBuffer,1,outputSize,f);
+        fclose(f);
     }
-    else{//deflemask call compatibility  
-        sprintf(outROMPath,"%s",OUTPATH);
+    if(EXPORTMODE == 2){//.gbs export mode
+        exportGBS(songInfo, patchBuffer, patchBufferSize);
     }
-    FILE* f = fopen(outROMPath,"wb");
-    printfLibless("GB ROM final output Size: %ubytes\n",0x4000 * (gb_patch_rom_length + 1));
-    int outputSize = gb_patch_rom_length + 0x4000 * (numBanks + 1);
-    fwrite(patchBuffer,1,outputSize,f);
-    fclose(f);
     free(patchBuffer);
 
 }
@@ -264,9 +399,9 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                         currentBankBuffer[currentOutputPos] = NEXTBANKCUSCOMMAND;
                     }
                     else{
-                        currentBankBuffer[currentOutputPos] = WRITECUSCOMMAND;//write new command
+                        //NOTE new format means that NRxx register writes addresses take up the command space
+                        //if first byte bit7 = 0 then this byte contains the write address
                         currentVgmPos++;
-                        currentOutputPos++;
                         currentBankBuffer[currentOutputPos] = vgmToGBTL(vgmBuffer.buffer[currentVgmPos]);//write address
                         currentVgmPos++;
                         currentOutputPos++;
@@ -316,7 +451,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
                     }
                     else{
                         currentVgmPos += 9;//jump to data block value
-                        currentBankBuffer[currentOutputPos] = WRITECUSCOMMAND;
+                        currentBankBuffer[currentOutputPos] = WRITECUSHRAM;
                         currentOutputPos++;
                         currentBankBuffer[currentOutputPos] = DEFAULT_SYNC_HIGH_ADDRESS;
                         currentOutputPos++;
@@ -368,18 +503,26 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
     }
 
     
-    if (EXPORTMODE){//if asm export mode was enabled
+    if (EXPORTMODE == 1){//if asm export (.bin) mode was enabled
         if (ENGINE_RATE != 60){
             int tmaDistance = calculateTMAModulo(TMA_RATE0);
             printfLibless("Non-vBlank Engine speed found, set TMA to = 0x%X\n",tmaDistance);
         }
         writeAllBanks(output,currentBank);       
     }
-    else{
-        patchROM(output,currentBank, loopInfo);
+
+    else{//.gb export mode or .gbs export mode
+        SongInfo songInfo;
+        //debug
+        getSongInfo(&songInfo, vgmBuffer);
+        patchROM(output, currentBank, loopInfo, songInfo);
+        free(songInfo.artist);
+        free(songInfo.title);
     }
 
-    printfLibless("Conversion Complete!\n%u banks used\n",currentBank+1);
+    #if !LIB_MODE
+    printf("Conversion Complete!\n%u banks used\n",currentBank+1);//hacky bug solution
+    #endif
 }
 
 void parseArgs(int argc, char** argv){
@@ -392,7 +535,9 @@ void parseArgs(int argc, char** argv){
         if(strcmp("-r",argv[i]) == 0){//rate
             i++;
             ENGINE_RATE = atoi(argv[i]);
-            printfLibless("Engine rate set to %u\n",ENGINE_RATE);
+            #if !LIB_MODE
+            printf("Engine rate set to %i\n",ENGINE_RATE);//hacky bug solution
+            #endif
         }
         else if(strcmp("-o",argv[i]) == 0){//output path
             i++;
@@ -402,7 +547,7 @@ void parseArgs(int argc, char** argv){
             printfLibless(HELPSTRING);
             exit(1);
         }
-        else if(strcmp("-bin",argv[i]) == 0){//
+        else if(strcmp("-bin",argv[i]) == 0){//bin export
             EXPORTMODE = 1;
         }
         else if(strcmp("-td",argv[i]) == 0){//tma decrease
@@ -410,6 +555,11 @@ void parseArgs(int argc, char** argv){
         }
         else if(strcmp("-ti",argv[i]) == 0){//tma increase
             TMA_OFFSET = atoi(argv[++i]);
+        }
+        else if(strcmp("-g",argv[i]) == 0){//gbs export
+            //.gbs is generated is ROM patch because .gbs patching only cuts off
+            //lower addresses from the patched rom
+            EXPORTMODE = 2;
         }
     }   
 
@@ -427,6 +577,21 @@ int gbvgm(char *vgm_source_path, int hz, char* romPath){  // For .gb creation in
     convertToNewFormat(vgmBuffer);
     free(vgmBuffer.buffer);
     return 0;
+}
+
+int gbsRender(char *vgm_source_path, int hz, char* romPath){//I think this should work. Feel free to change if it does not
+    EXPORTMODE = 2;
+    TMA_OFFSET = 0;
+    ENGINE_RATE = hz;
+    strcpy(OUTPATH,romPath);
+    VgmBuffer vgmBuffer;
+    openFile(vgm_source_path,&vgmBuffer);
+    checkHeader(vgmBuffer);
+    checkVgmIsDeflemask(vgmBuffer);
+    convertToNewFormat(vgmBuffer);
+    free(vgmBuffer.buffer);
+    return 0;
+
 }
 #else
 int main(int argc, char* argv[]){

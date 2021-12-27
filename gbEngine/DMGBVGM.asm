@@ -1,4 +1,6 @@
 ;ENGINE CODE
+engineID:
+    db "DMGBVGM 0.6 PEGMODE"
 DMEngineInit:
     ld a,DMVGM_START_BANK
     ld [CurrentSoundBankLow],a
@@ -27,12 +29,13 @@ DMEngineUpdate:
     ld [SoundWaitFrames],a
     ret
 .loadCurrentBank
-    ld a ,[CurrentSoundBankHigh]
-    ld b,a
     ld a ,[CurrentSoundBankLow]
-    ld [rROMB0],a
+    ld b,a
+    ld a ,[CurrentSoundBankHigh]
+    ld [rROMB1],a;note: changed order for GBS support
     ld a,b
-    ld [rROMB1],a
+    ld [rROMB0],a
+
     
 .commandCheckInit
     ld hl,VgmLookupPointer;load data pointer
@@ -43,26 +46,25 @@ DMEngineUpdate:
     ld l,c
 .commandCheck
     ld a,[hl];load data at data pointer, don't inc hl here because it may not be needed for current command
-.checkWriteCmd
+.checkWriteNRCmd;check noise register write
     bit 7,a
-    jr z,.checkWaitCmd
-    inc hl
-    ld a, [hl+]
+    jr nz,.checkWaitCmd;first command is a special case! We check bit 7 for a mask for cmd1
     ld b, $FF
     ld c, a
+    inc hl
     ld a, [hl+]
     ld [bc], a
     jr .commandCheck
 .checkWaitCmd
-    bit 6,a
-    jr z,.checkNextBank
+    cp DMVGM_CMD_2
+    jr nz,.checkNextBank
     inc hl
     ld a,[hl+]
     ld [SoundWaitFrames],a
     jr .endFrame
 .checkNextBank
-    bit 5,a
-    jr z,.checkLoop
+    cp DMVGM_CMD_3
+    jr nz,.checkHWrite
     ld bc, $4000
     ld hl, VgmLookupPointer 
     ld [hl], b
@@ -78,9 +80,20 @@ DMEngineUpdate:
     ld a, c
     ld [CurrentSoundBankLow],a
     ret;DO NOT END FRAME NORMALLY
-.checkLoop;unimplemented
-    bit 4,a
-    jr z,.checkEndSong
+.checkHWrite;normal H write
+    cp DMVGM_CMD_4
+    jr nz,.checkLoop
+    inc hl
+    ld a, [hl+]
+    ld b, $FF
+    ld c, a
+    ld a, [hl+]
+    ld [bc], a
+    jr .commandCheck
+
+.checkLoop
+    cp DMVGM_CMD_5
+    jr nz,.checkEndSong
     ;load new bank
     ld hl, loopBank
     ld a, [hl+]
@@ -95,12 +108,10 @@ DMEngineUpdate:
     ld [VgmLookupPointerHigh],a
     ret
 .checkEndSong
-    bit 3,a
-    jr z,.errorInCheck
+    cp DMVGM_CMD_6
+    jr nz,.errorInCheck
     ;No need to set up registers for quiet status. should be done in tracker via envelopes, OFF or ECxx
-    xor a
-    ld [SoundStatus],a
-    call resetSound
+    call stopMusic
     jr .endFrame
 .errorInCheck
     ;handle stuff
@@ -110,6 +121,12 @@ DMEngineUpdate:
     ld [VgmLookupPointerHigh],a
     ld a, l
     ld [VgmLookupPointerLow],a
+    ret
+
+stopMusic:
+    xor a
+    ld [SoundStatus],a
+    call resetSound
     ret
 
 resetSound:
