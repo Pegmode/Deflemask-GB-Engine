@@ -1,7 +1,7 @@
 ;Deflemask Player ROM
 include "hardware.asm"
-include "soundEngineConstants.asm"
-include "soundEngineVars.asm"
+include "../gbEngine/soundEngineConstants.asm"
+include "../gbEngine/soundEngineVars.asm"
 include "vars.asm"
 
 SECTION "ROM ID", ROM0[$1]
@@ -23,7 +23,7 @@ jp codeInit
 
 
 SECTION "Song Parameters", ROM0[$3FFA];song patch variables
-include "soundEngineSongParams.asm"
+include "../gbEngine/soundEngineSongParams.asm"
 
 SECTION "code",ROM0[$150]
 codeInit:
@@ -133,7 +133,7 @@ textData6:;artist
     db 0
 
 betaText:
-    db "0.6 PRE-RELEASE"
+    ;db "0.6 PRE-RELEASE"
     db 0
 
 checkButtonInput:
@@ -166,4 +166,11 @@ gbsInit:;init only for gbs
     ld [SoundStatus],a
     ret
     
-include "DMGBVGM.asm"
+include "../gbEngine/DMGBVGM.asm"
+
+SECTION "sound1", ROMX, BANK[1]
+    incbin "exampleData/gyrus/gyrus0.bin"
+    SECTION "sound2", ROMX, BANK[2]
+    incbin "exampleData/gyrus/gyrus1.bin"
+    SECTION "sound3", ROMX, BANK[3]
+    incbin "exampleData/gyrus/gyrus2.bin"

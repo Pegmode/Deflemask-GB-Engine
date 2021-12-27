@@ -89,7 +89,7 @@ char* PATCHROM_PATH = "patchROM.gb";
 int TMA_OFFSET = 0;//value to add to TMA for fine control
 int LOOPVGMADDR = 0;//loop address in .vgm file 0 = no loop
 
-char* HELPSTRING = "\nversion 0.6 Pre-release\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
+char* HELPSTRING = "\nversion 0.6\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
 \nargs:\n\
 -r <rate> set engine rate\n\
 -o <outpath> set the output path\n\
@@ -209,8 +209,6 @@ int calculateTMAModulo(int tmaRate){//calculate the modulo value to use
     return 0xFF-(int)whole;
 }
 
-
-
 void checkVgmIsDeflemask(VgmBuffer vgmBuffer){
     uint8_t deflemaskFooter[] = {0x44, 0x00, 0x65, 0x00, 0x66, 0x00, 0x6C, 0x00, 0x65, 0x00, 0x4D, 0x00, 0x61, 0x00, 0x73, 0x00, 0x6B, 0x00, 0x20, 0x00, 0x54, 0x00, 0x72, 0x00, 0x61, 0x00, 0x63, 0x00, 0x6B, 0x00, 0x65, 0x00, 0x72, 0x00, 0x00, 0x00, 0x00, 0x00,};
     uint8_t footerBuffer[0x26];
@@ -221,7 +219,7 @@ void checkVgmIsDeflemask(VgmBuffer vgmBuffer){
     }
 }
 
-void writeAllBanks(uint8_t** banks,int numBanks){
+void writeAllBanks(uint8_t** banks,int numBanks){//bin export mode
     char outputName[0xFF];
     for(int i = 0; i <= numBanks; i++){
         sprintf(outputName,"%s%u.bin",OUTPATH,i);
@@ -246,7 +244,6 @@ int findStartOfVGMString(VgmBuffer vgmBuffer, int startPos){//scans for the begi
         }
     }
 }
-
 
 int scanVgmString(VgmBuffer vgmBuffer, char* output, int startPos){
     //find start of string
@@ -309,8 +306,6 @@ void exportGBS(SongInfo songInfo, uint8_t* patchBuffer, int patchBufferSize){//p
     strcpy(&gbsFile[0x10], songInfo.title);
     strcpy(&gbsFile[0x30], songInfo.artist);
 
-
-
     //printf("PATCH BUFFER %x\n", patchBuffer[GBS_DATA_START]);
     memcpy(&gbsFile[0x70], &patchBuffer[GBS_DATA_START], patchBufferSize - GBS_DATA_START);
 
@@ -368,11 +363,9 @@ void patchROM(uint8_t** banks,int numBanks, LoopInfo loopInfo, SongInfo songInfo
         fwrite(patchBuffer,1,outputSize,f);
         fclose(f);
     }
-
     if(EXPORTMODE == 2){//.gbs export mode
         exportGBS(songInfo, patchBuffer, patchBufferSize);
     }
-
     free(patchBuffer);
 
 }
@@ -510,7 +503,7 @@ void convertToNewFormat(VgmBuffer vgmBuffer){
     }
 
     
-    if (EXPORTMODE == 1){//if asm export mode was enabled
+    if (EXPORTMODE == 1){//if asm export (.bin) mode was enabled
         if (ENGINE_RATE != 60){
             int tmaDistance = calculateTMAModulo(TMA_RATE0);
             printfLibless("Non-vBlank Engine speed found, set TMA to = 0x%X\n",tmaDistance);
