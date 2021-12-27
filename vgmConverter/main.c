@@ -299,10 +299,16 @@ void exportGBS(SongInfo songInfo, uint8_t* patchBuffer, int patchBufferSize){//p
     //timer control(rTAC)
     gbsFile[0xF] = 0;//init0
 
+    if (patchBuffer[ROM_SONG_TMA_TAC_CONST] != 0 ){
+        //overwrite TMA,TAC if using custom timing
+        memcpy(&gbsFile[0xE], &patchBuffer[ROM_SONG_TMA_MOD_CONST], 1);
+        memcpy(&gbsFile[0xF], &patchBuffer[ROM_SONG_TMA_TAC_CONST], 1);
+    }
+
     //add title/author
     strcpy(&gbsFile[0x10], songInfo.title);
     strcpy(&gbsFile[0x30], songInfo.artist);
-        printf("SONG NAME%s\n", &patchBuffer[0x10]);
+
 
 
     //printf("PATCH BUFFER %x\n", patchBuffer[GBS_DATA_START]);
