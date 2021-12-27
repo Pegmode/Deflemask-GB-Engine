@@ -15,6 +15,7 @@ supports `EExx` event commands from Delfemask and uses proper engine timings ins
 * `-r <engine rate>` set the engine rate in Hz (Clock value in Deflemask). Required if you use a engine tick speed other than NTSC.
 * `-o <output path>` set the output filename (defaults to "out")
 * `-bin` export song data as .bin to include in a GB rom.
+* `-g` export .gbs
 * `-ti <offset>` increase tma offset timing (speed up song if using custom engine speed).
 * `-td <offset>` decrease tma offset timing (slow down song if using custom engine speed).
 
@@ -34,17 +35,7 @@ incbin "ExampleData/ahoy/ahoy9.bin"
 ## Projects that use this engine
 - [Marine AhoyGB](https://github.com/Pegmode/MarineAhoyGB)
 
-## Register Dump command format
-Commands are formatted so that each bit is a flag that represents a command.
-### Format Description
 
-| Command Description  | Command Value | arg1 | arg2 |
-| ------------- | ------------- | ------------- |  ------------- |
-| Write 0xij to FFxy (LDH xy ij) | 0x80  | xy address value | Data ij |
-| Wait for xy frames | 0x40 | wait time xy |  |
-| Go to next ROM bank | 0x20 |  |  |
-| Loop to loop adddress and bank | 0x10 |  |  |
-| End song | 0x08 |  |  |
 
 #### Sync command
 Sync signals write to HRAM with the address specified in `DEFAULT_SYNC_HIGH_ADDRESS` in the converter (default `0x80`). In deflemask use the `EExx` command to write the value xx to `DEFAULT_SYNC_HIGH_ADDRESS`.
