@@ -5,6 +5,7 @@
 *.obj
 *.gb
 *.dll
+*.gbs
 .vscode/
 /gbEngine/zlib1.dll
 /vgmConverter/*.bin
