@@ -1,4 +1,4 @@
-# -DeflemaskGBVGM-
+# -DGB Engime-
 Custom Deflemask .vgm based playback engine for the Nintendo Game Boy. Now the official Deflemask ROM exporter as of v1.0.3.
 
 **this engine only works with Deflemask generated .vgms and is not intended for other .vgms**
@@ -6,6 +6,8 @@ Custom Deflemask .vgm based playback engine for the Nintendo Game Boy. Now the o
 supports `EExx` event commands from Delfemask and uses proper engine timings instead of .vgm update timings. Converter converts .vgm to either .gbs, .bin or .gb.
 
 *"High on time efficiency, low on space efficiency."*
+
+Formerly known as Deflemask GBVGM (DMGBVGM)
 
 
 ## Usage
