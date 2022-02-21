@@ -312,8 +312,7 @@ void exportGBS(SongInfo songInfo, uint8_t* patchBuffer, int patchBufferSize){//p
     //write to .gbs file
     char outROMPath[0xFF];
 
-    sprintf(outROMPath,"%s.gbs",OUTPATH);
-    if(OUTPATH[strlen(OUTPATH)-3]!='.'){
+    if(OUTPATH[strlen(OUTPATH)-4]!='.'){
         sprintf(outROMPath,"%s.gbs",OUTPATH);
     }
     else{//deflemask call compatibility  
