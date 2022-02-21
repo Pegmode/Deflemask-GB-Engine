@@ -1,5 +1,5 @@
 # Deflemask Game Boy Engine (DGB)
-Custom Deflemask .vgm based music playback engine for the Nintendo Game Boy. Now the official Deflemask ROM exporter as of v1.0.3.
+Custom Deflemask .vgm based music playback engine for the Nintendo Game Boy. Now the official Deflemask ROM exporter as of Deflemask v1.0.3.
 
 **this engine only works with Deflemask generated .vgms and is not intended for other .vgms**
 
