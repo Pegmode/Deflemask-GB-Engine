@@ -28,6 +28,7 @@ if you want to add this player to your game boy assembly program check out [this
 
 ## Projects that use this engine
 - [Marine AhoyGB](https://github.com/Pegmode/MarineAhoyGB)
+- [Tendonin - Rebels](https://www.youtube.com/watch?v=GleZBHhOsmE)
 
 ## More info
 For more info, check out [the wiki](https://github.com/Pegmode/-DeflemaskGBVGM-/wiki)
