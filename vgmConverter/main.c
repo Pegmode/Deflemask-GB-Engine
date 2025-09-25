@@ -1,4 +1,5 @@
-//by Pegmode  
+//by Pegmode
+//EXPERIMENTAL 0.6 FURNACE BUILD
 
 #define LIB_MODE 0//flag to disable main/ enable library call
 
@@ -12,7 +13,7 @@
 #include "patchrom.h"
 //CONSTANTS
 //===========================================================
-#define DEFLEMASK_DATA_START 0xC0
+#define DEFLEMASK_DATA_START 0x111//EXPERIMENTAL BUILD!! THIS VALUE IS FOR FURNACE
 #define VGM_SAMPLE_RATE 44100//this is rate that a vgm file samples the registers
 #define GB_BANK_SIZE 0x3FFF//~16kb per bank
 #define TMA_RATE0 4096//TMA rate in hz
@@ -89,7 +90,7 @@ char* PATCHROM_PATH = "patchROM.gb";
 int TMA_OFFSET = 0;//value to add to TMA for fine control
 int LOOPVGMADDR = 0;//loop address in .vgm file 0 = no loop
 
-char* HELPSTRING = "\nversion 0.6\nHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
+char* HELPSTRING = "\nversion 0.61FE\nFurnace Experimental\nExperimental verison, this may break\nnHelp:\n DeflemaskGBGMConverter <input vgm> [args...]\n\
 \nargs:\n\
 -r <rate> set engine rate\n\
 -o <outpath> set the output path\n\
@@ -602,15 +603,13 @@ int gbsRender(char *vgm_source_path, int hz, char* romPath){//I think this shoul
 #else
 int main(int argc, char* argv[]){
     parseArgs(argc,argv);
-    printfLibless("RUNNING\n");
+    printfLibless("RUNNING FURNACE EXPERIMENTAL BUILD\n");
     VgmBuffer vgmBuffer;
     printfLibless("OPENING .vgm\n");    
     openFile(argv[1],&vgmBuffer);
     printfLibless("OPENED\n");
     checkHeader(vgmBuffer);
     printfLibless("Header Check passed!\n");
-    checkVgmIsDeflemask(vgmBuffer);
-    printfLibless("Deflemask Footer check passed!\n");
     convertToNewFormat(vgmBuffer);
     free(vgmBuffer.buffer);
     return 0;
